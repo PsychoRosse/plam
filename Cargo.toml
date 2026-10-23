@@ -1,0 +1,19 @@
+[workspace]
+members = [
+    "bin",
+    "core",
+]
+
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/PsychoRosse/kodanu"
+homepage = "https://github.com/PsychoRosse/kodanu"
+authors = ["PsychoRosse"]
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+thiserror = { version = "2" }
