@@ -1,7 +1,7 @@
+use crate::Vec3Error;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
-
-use crate::Vec3Error;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Vec3 {
@@ -23,7 +23,7 @@ impl Vec3 {
 impl Vec3 {
     #[inline]
     #[must_use]
-    const fn new_unchecked(x: f32, y: f32, z: f32) -> Self {
+    pub(crate) const fn new_unchecked(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
     }
 
@@ -73,13 +73,7 @@ impl Vec3 {
 
     #[inline]
     #[must_use]
-    pub fn try_length(self) -> Result<f32, Vec3Error> {
-        self.length_stable()
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn length_stable(self) -> Result<f32, Vec3Error> {
+    pub fn length(self) -> Result<f32, Vec3Error> {
         self.ensure_finite()?;
 
         let scale = self.x.abs().max(self.y.abs()).max(self.z.abs());
@@ -204,7 +198,6 @@ impl Vec3 {
             .map_err(|_| Vec3Error::InvalidResult)
     }
 
-    /// Умножает вектор на скаляр.
     #[inline]
     #[must_use]
     pub fn scale(self, scalar: f32) -> Result<Self, Vec3Error> {
@@ -241,15 +234,10 @@ impl Vec3 {
         self.ensure_finite()?;
         other.ensure_finite()?;
 
-        let x = self.x - other.x;
-        let y = self.y - other.y;
-        let z = self.z - other.z;
+        let delta = Self::new(self.x - other.x, self.y - other.y, self.z - other.z)
+            .map_err(|_| Vec3Error::InvalidResult)?;
 
-        if !x.is_finite() || !y.is_finite() || !z.is_finite() {
-            return Err(Vec3Error::InvalidResult);
-        }
-
-        Self::new_unchecked(x, y, z).try_length()
+        delta.length()
     }
 
     #[inline]

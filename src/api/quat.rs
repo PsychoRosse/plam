@@ -75,10 +75,6 @@ impl Quat {
     #[inline]
     #[must_use]
     pub fn xyz(self) -> Result<Vec3, QuatError> {
-        if !self.is_finite() {
-            return Err(QuatError::NonFiniteInput);
-        }
-
         Vec3::new(self.x, self.y, self.z).map_err(|_| QuatError::InvalidResult)
     }
 
@@ -194,20 +190,25 @@ impl Quat {
             return Err(QuatError::ZeroLength);
         }
 
-        let x = self.x / scale;
-        let y = self.y / scale;
-        let z = self.z / scale;
-        let w = self.w / scale;
+        let x = self.x as f64;
+        let y = self.y as f64;
+        let z = self.z as f64;
+        let w = self.w as f64;
 
         let norm_squared = x * x + y * y + z * z + w * w;
 
-        Self::new(
-            ((-x) / norm_squared) / scale,
-            ((-y) / norm_squared) / scale,
-            ((-z) / norm_squared) / scale,
-            (w / norm_squared) / scale,
-        )
-        .map_err(|_| QuatError::InvalidResult)
+        if norm_squared == 0.0 {
+            return Err(QuatError::ZeroLength);
+        }
+
+        let result = [
+            (-x / norm_squared) as f32,
+            (-y / norm_squared) as f32,
+            (-z / norm_squared) as f32,
+            (w / norm_squared) as f32,
+        ];
+
+        Self::new(result[0], result[1], result[2], result[3]).map_err(|_| QuatError::InvalidResult)
     }
 
     #[inline]
@@ -398,28 +399,19 @@ impl Quat {
     #[inline]
     #[must_use]
     pub fn from_rotation_x(degrees: f32) -> Result<Self, QuatError> {
-        Self::from_axis_angle(
-            Vec3::new(1.0, 0.0, 0.0).map_err(|_| QuatError::InvalidResult)?,
-            degrees,
-        )
+        Self::from_axis_angle(Vec3::RIGHT, degrees)
     }
 
     #[inline]
     #[must_use]
     pub fn from_rotation_y(degrees: f32) -> Result<Self, QuatError> {
-        Self::from_axis_angle(
-            Vec3::new(0.0, 1.0, 0.0).map_err(|_| QuatError::InvalidResult)?,
-            degrees,
-        )
+        Self::from_axis_angle(Vec3::UP, degrees)
     }
 
     #[inline]
     #[must_use]
     pub fn from_rotation_z(degrees: f32) -> Result<Self, QuatError> {
-        Self::from_axis_angle(
-            Vec3::new(0.0, 0.0, 1.0).map_err(|_| QuatError::InvalidResult)?,
-            degrees,
-        )
+        Self::from_axis_angle(Vec3::DOWN, degrees)
     }
 
     #[inline]

@@ -1,7 +1,11 @@
 use crate::Vec2Error;
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{
+    Deserialize, Serialize, Serializer,
+    de::Error as DeError,
+    ser::{Error as SerError, SerializeStruct},
+};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Vec2 {
@@ -21,7 +25,7 @@ impl Vec2 {
 impl Vec2 {
     #[inline]
     #[must_use]
-    const fn new_unchecked(x: f32, y: f32) -> Self {
+    pub(crate) const fn new_unchecked(x: f32, y: f32) -> Self {
         Self { x, y }
     }
 
@@ -66,12 +70,6 @@ impl Vec2 {
     #[inline]
     #[must_use]
     pub fn length(self) -> Result<f32, Vec2Error> {
-        self.length_stable()
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn length_stable(self) -> Result<f32, Vec2Error> {
         self.ensure_finite()?;
 
         let scale = self.x.abs().max(self.y.abs());
@@ -210,22 +208,17 @@ impl Vec2 {
         self.ensure_finite()?;
         other.ensure_finite()?;
 
-        let dx = self.x - other.x;
-        let dy = self.y - other.y;
+        let delta =
+            Self::new(self.x - other.x, self.y - other.y).map_err(|_| Vec2Error::InvalidResult)?;
 
-        if !dx.is_finite() || !dy.is_finite() {
-            return Err(Vec2Error::InvalidResult);
-        }
-
-        Self::new_unchecked(dx, dy).length()
+        delta.length()
     }
 
     #[inline]
     #[must_use]
     pub fn perpendicular(self) -> Result<Self, Vec2Error> {
         self.ensure_finite()?;
-
-        Self::new(-self.y, self.x).map_err(|_| Vec2Error::InvalidResult)
+        Ok(Self::new_unchecked(-self.y, self.x))
     }
 
     #[inline]
@@ -246,10 +239,8 @@ impl Serialize for Vec2 {
         S: Serializer,
     {
         if !self.is_finite() {
-            return Err(serde::ser::Error::custom("Vec2 coordinates must be finite"));
+            return Err(SerError::custom("Vec2 coordinates must be finite"));
         }
-
-        use serde::ser::SerializeStruct;
 
         let mut state = serializer.serialize_struct("Vec2", 2)?;
 
@@ -274,6 +265,6 @@ impl<'de> Deserialize<'de> for Vec2 {
 
         let raw = RawVec2::deserialize(deserializer)?;
 
-        Vec2::new(raw.x, raw.y).map_err(serde::de::Error::custom)
+        Vec2::new(raw.x, raw.y).map_err(DeError::custom)
     }
 }

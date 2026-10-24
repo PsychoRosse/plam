@@ -4,7 +4,7 @@ use thiserror::Error;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Error, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Error, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum QuatError {
     #[error("Quaternion input contains a non-finite value")]
     NonFiniteInput,

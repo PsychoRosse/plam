@@ -14,7 +14,7 @@ pub struct MouseDelta {
 }
 
 impl MouseDelta {
-    pub const MAX_SCROLL_DELTA: f32 = 1_000_000.0;
+    pub const MAX_COMPONENT: f32 = 1_000_000.0;
     pub const DEFAULT_MULTIPLE: f32 = 32.0;
 }
 
@@ -26,7 +26,7 @@ impl MouseDelta {
             return Err(MouseDeltaError::NonFinite);
         }
 
-        if x.abs() > Self::MAX_SCROLL_DELTA || y.abs() > Self::MAX_SCROLL_DELTA {
+        if x.abs() > Self::MAX_COMPONENT || y.abs() > Self::MAX_COMPONENT {
             return Err(MouseDeltaError::OutOfRange);
         }
 
@@ -52,10 +52,10 @@ impl MouseDelta {
     pub const fn is_valid(&self) -> bool {
         self.x.is_finite()
             && self.y.is_finite()
-            && self.x >= -Self::MAX_SCROLL_DELTA
-            && self.x <= Self::MAX_SCROLL_DELTA
-            && self.y >= -Self::MAX_SCROLL_DELTA
-            && self.y <= Self::MAX_SCROLL_DELTA
+            && self.x >= -Self::MAX_COMPONENT
+            && self.x <= Self::MAX_COMPONENT
+            && self.y >= -Self::MAX_COMPONENT
+            && self.y <= Self::MAX_COMPONENT
     }
 
     #[inline]

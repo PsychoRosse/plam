@@ -315,10 +315,6 @@ impl Vec4 {
     #[inline]
     #[must_use]
     pub fn xyz(self) -> Result<Vec3, Vec3Error> {
-        if !self.is_finite() {
-            return Err(Vec3Error::NonFiniteInput);
-        }
-
         Vec3::new(self.x, self.y, self.z)
     }
 
@@ -328,16 +324,15 @@ impl Vec4 {
         self.ensure_finite()?;
         other.ensure_finite()?;
 
-        let x = self.x - other.x;
-        let y = self.y - other.y;
-        let z = self.z - other.z;
-        let w = self.w - other.w;
+        let delta = Self::new(
+            self.x - other.x,
+            self.y - other.y,
+            self.z - other.z,
+            self.w - other.w,
+        )
+        .map_err(|_| Vec4Error::InvalidResult)?;
 
-        if !x.is_finite() || !y.is_finite() || !z.is_finite() || !w.is_finite() {
-            return Err(Vec4Error::InvalidResult);
-        }
-
-        Self::new_unchecked(x, y, z, w).length()
+        delta.length()
     }
 
     #[inline]

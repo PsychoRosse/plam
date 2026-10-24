@@ -6,19 +6,19 @@ use clama::Event;
 #[cfg_attr(feature = "clama", derive(Event))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SurfaceSize {
-    pub(crate) width: NonZero<u16>,
-    pub(crate) height: NonZero<u16>,
+    pub(crate) width: NonZero<u32>,
+    pub(crate) height: NonZero<u32>,
 }
 
 impl SurfaceSize {
-    pub const MAX_DIMENSION: u16 = 16_384;
+    pub const MAX_DIMENSION: u32 = 16_384;
     pub const MAX_AREA: u64 = 67_108_864;
 }
 
 impl SurfaceSize {
     #[inline]
     #[must_use]
-    pub fn clamped(width: u16, height: u16) -> Self {
+    pub fn clamped(width: u32, height: u32) -> Self {
         let width = width.clamp(1, Self::MAX_DIMENSION);
         let height = height.clamp(1, Self::MAX_DIMENSION);
 
@@ -28,8 +28,8 @@ impl SurfaceSize {
             let scale = (Self::MAX_AREA as f64 / area as f64).sqrt();
 
             (
-                ((width as f64 * scale).floor() as u16).max(1),
-                ((height as f64 * scale).floor() as u16).max(1),
+                ((width as f64 * scale).floor() as u32).max(1),
+                ((height as f64 * scale).floor() as u32).max(1),
             )
         } else {
             (width, height)
@@ -46,8 +46,8 @@ impl SurfaceSize {
         }
 
         Self {
-            width: NonZero::<u16>::new(width).unwrap_or(NonZero::<u16>::MIN),
-            height: NonZero::<u16>::new(height).unwrap_or(NonZero::<u16>::MIN),
+            width: NonZero::<u32>::new(width).unwrap(),
+            height: NonZero::<u32>::new(height).unwrap(),
         }
     }
 }
@@ -55,11 +55,23 @@ impl SurfaceSize {
 impl Default for SurfaceSize {
     #[inline]
     fn default() -> Self {
-        Self::clamped(666, 555)
+        Self::clamped(1280, 720)
     }
 }
 
 impl SurfaceSize {
+    #[inline]
+    #[must_use]
+    pub fn with_width(self, width: u32) -> Self {
+        Self::clamped(width, self.height())
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn with_height(self, height: u32) -> Self {
+        Self::clamped(self.width(), height)
+    }
+
     #[inline]
     #[must_use]
     pub fn minimum() -> Self {
@@ -68,13 +80,13 @@ impl SurfaceSize {
 
     #[inline]
     #[must_use]
-    pub const fn width(&self) -> u16 {
+    pub const fn width(&self) -> u32 {
         self.width.get()
     }
 
     #[inline]
     #[must_use]
-    pub const fn height(&self) -> u16 {
+    pub const fn height(&self) -> u32 {
         self.height.get()
     }
 
@@ -110,7 +122,7 @@ impl SurfaceSize {
 
     #[inline]
     #[must_use]
-    pub const fn min_dimension(self) -> u16 {
+    pub const fn min_dimension(self) -> u32 {
         if self.width.get() < self.height.get() {
             self.width.get()
         } else {
@@ -120,7 +132,7 @@ impl SurfaceSize {
 
     #[inline]
     #[must_use]
-    pub const fn max_dimension(self) -> u16 {
+    pub const fn max_dimension(self) -> u32 {
         if self.width.get() > self.height.get() {
             self.width.get()
         } else {
@@ -129,28 +141,28 @@ impl SurfaceSize {
     }
 }
 
-impl From<[u16; 2]> for SurfaceSize {
+impl From<[u32; 2]> for SurfaceSize {
     #[inline]
-    fn from([width, height]: [u16; 2]) -> Self {
+    fn from([width, height]: [u32; 2]) -> Self {
         Self::clamped(width, height)
     }
 }
 
-impl From<SurfaceSize> for [u16; 2] {
+impl From<SurfaceSize> for [u32; 2] {
     #[inline]
     fn from(size: SurfaceSize) -> Self {
         [size.width(), size.height()]
     }
 }
 
-impl From<(u16, u16)> for SurfaceSize {
+impl From<(u32, u32)> for SurfaceSize {
     #[inline]
-    fn from((width, height): (u16, u16)) -> Self {
+    fn from((width, height): (u32, u32)) -> Self {
         Self::clamped(width, height)
     }
 }
 
-impl From<SurfaceSize> for (u16, u16) {
+impl From<SurfaceSize> for (u32, u32) {
     #[inline]
     fn from(size: SurfaceSize) -> Self {
         (size.width(), size.height())
@@ -168,8 +180,8 @@ impl<'de> Deserialize<'de> for SurfaceSize {
     {
         #[derive(Deserialize)]
         struct RawSurfaceSize {
-            width: u16,
-            height: u16,
+            width: u32,
+            height: u32,
         }
 
         let raw = RawSurfaceSize::deserialize(deserializer)?;

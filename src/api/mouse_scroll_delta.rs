@@ -14,7 +14,7 @@ pub struct MouseScrollDelta {
 }
 
 impl MouseScrollDelta {
-    pub const DEFAULT_MULTIPLE: f32 = 32.0;
+    pub const DEFAULT_SCROLL_MULTIPLIER: f32 = 32.0;
     pub const MAX_COMPONENT: f32 = 1_000_000.0;
 }
 

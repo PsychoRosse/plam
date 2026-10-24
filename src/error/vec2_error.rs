@@ -4,7 +4,7 @@ use thiserror::Error;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Error, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Error, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Vec2Error {
     #[error("Vector contains non-finite values")]
     NonFiniteInput,

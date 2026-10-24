@@ -76,16 +76,17 @@ impl Mat4 {
     }
 
     #[inline]
+    #[must_use]
     pub fn from_array(array: [f32; 16]) -> Result<Self, Mat4Error> {
+        if !array.iter().all(|value| value.is_finite()) {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
         Self::new(
-            Vec4::new(array[0], array[1], array[2], array[3])
-                .map_err(|_| Mat4Error::NonFiniteInput)?,
-            Vec4::new(array[4], array[5], array[6], array[7])
-                .map_err(|_| Mat4Error::NonFiniteInput)?,
-            Vec4::new(array[8], array[9], array[10], array[11])
-                .map_err(|_| Mat4Error::NonFiniteInput)?,
-            Vec4::new(array[12], array[13], array[14], array[15])
-                .map_err(|_| Mat4Error::NonFiniteInput)?,
+            Vec4::new_unchecked(array[0], array[1], array[2], array[3]),
+            Vec4::new_unchecked(array[4], array[5], array[6], array[7]),
+            Vec4::new_unchecked(array[8], array[9], array[10], array[11]),
+            Vec4::new_unchecked(array[12], array[13], array[14], array[15]),
         )
     }
 
