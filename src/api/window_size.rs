@@ -2,8 +2,8 @@ use std::num::NonZero;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct WindowSize {
-    width: NonZero<u16>,
-    height: NonZero<u16>,
+    pub(crate) width: NonZero<u16>,
+    pub(crate) height: NonZero<u16>,
 }
 
 impl WindowSize {
@@ -132,8 +132,8 @@ impl WindowSize {
 
     #[inline]
     #[must_use]
-    pub fn is_square(self) -> bool {
-        self.width == self.height
+    pub const fn is_square(self) -> bool {
+        self.width.get() == self.height.get()
     }
 
     #[inline]

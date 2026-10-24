@@ -1,19 +1,22 @@
-[workspace]
-members = [
-    "bin",
-    "core",
-]
-
-resolver = "3"
-
-[workspace.package]
-version = "0.1.0"
+[package]
+name = "plam"
+version = "0.2.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/PsychoRosse/kodanu"
-homepage = "https://github.com/PsychoRosse/kodanu"
 authors = ["PsychoRosse"]
+repository = "https://github.com/PsychoRosse/plam"
+homepage = "https://github.com/PsychoRosse/plam"
+keywords = ["math", "gamedev", "gamedev-library"]
+categories = ["mathematics", "game-development"]
+license = "MIT OR Apache-2.0"
 
-[workspace.dependencies]
-serde = { version = "1.0.228", features = ["derive"] }
-thiserror = { version = "2" }
+[lib]
+path = "src/_lib.rs"
+
+[dependencies]
+thiserror = { version = "2.0.21" }
+
+serde = { version = "1.0.229", features = ["derive"], optional = true }
+
+[features]
+default = ["serde"]
+serde = ["dep:serde"]
