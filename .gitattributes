@@ -8,6 +8,4 @@
 *.yaml text eol=lf
 *.yml text eol=lf
 
-*.wgsl text eol=lf
-
 *.sh text eol=lf
