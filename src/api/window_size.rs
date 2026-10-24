@@ -1,5 +1,9 @@
 use std::num::NonZero;
 
+#[cfg(feature = "clama")]
+use clama::Event;
+
+#[cfg_attr(feature = "clama", derive(Event))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct WindowSize {
     pub(crate) width: NonZero<u16>,

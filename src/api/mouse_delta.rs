@@ -1,9 +1,12 @@
 use crate::{MouseDeltaError, MousePosition};
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg(feature = "clama")]
+use clama::Event;
+
+#[cfg_attr(feature = "clama", derive(Event))]
 #[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct MouseDelta {
     pub(crate) x: f32,
@@ -75,5 +78,44 @@ impl TryFrom<MousePosition> for MouseDelta {
     #[inline]
     fn try_from(pos: MousePosition) -> Result<Self, Self::Error> {
         Self::new(pos.x(), pos.y())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for MouseDelta {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        Self::new(self.x, self.y).map_err(serde::ser::Error::custom)?;
+
+        #[derive(Serialize)]
+        struct RawMouseDelta {
+            x: f32,
+            y: f32,
+        }
+
+        RawMouseDelta {
+            x: self.x,
+            y: self.y,
+        }
+        .serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for MouseDelta {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct RawMouseDelta {
+            x: f32,
+            y: f32,
+        }
+
+        let raw = RawMouseDelta::deserialize(deserializer)?;
+        Self::new(raw.x, raw.y).map_err(serde::de::Error::custom)
     }
 }

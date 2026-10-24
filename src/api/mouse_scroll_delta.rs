@@ -1,9 +1,12 @@
 use crate::MouseScrollDeltaError;
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg(feature = "clama")]
+use clama::Event;
+
+#[cfg_attr(feature = "clama", derive(Event))]
 #[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct MouseScrollDelta {
     pub(crate) x: f32,
@@ -42,6 +45,28 @@ impl MouseScrollDelta {
     #[must_use]
     pub const fn y(&self) -> f32 {
         self.y
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for MouseScrollDelta {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        Self::new(self.x, self.y).map_err(serde::ser::Error::custom)?;
+
+        #[derive(Serialize)]
+        struct RawMouseScrollDelta {
+            x: f32,
+            y: f32,
+        }
+
+        RawMouseScrollDelta {
+            x: self.x,
+            y: self.y,
+        }
+        .serialize(serializer)
     }
 }
 
