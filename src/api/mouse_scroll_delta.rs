@@ -2,7 +2,6 @@ use crate::MouseScrollDeltaError;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-
 #[cfg(feature = "clama")]
 use clama::Event;
 
@@ -20,7 +19,6 @@ impl MouseScrollDelta {
 
 impl MouseScrollDelta {
     #[inline]
-    #[must_use]
     pub fn new(x: f32, y: f32) -> Result<Self, MouseScrollDeltaError> {
         if !x.is_finite() || !y.is_finite() {
             return Err(MouseScrollDeltaError::NonFinite);

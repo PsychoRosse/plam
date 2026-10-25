@@ -2,7 +2,6 @@ use crate::{MouseDeltaError, MousePosition};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-
 #[cfg(feature = "clama")]
 use clama::Event;
 
@@ -20,8 +19,7 @@ impl MouseDelta {
 
 impl MouseDelta {
     #[inline]
-    #[must_use]
-    pub const fn new(x: f32, y: f32) -> Result<Self, MouseDeltaError> {
+        pub const fn new(x: f32, y: f32) -> Result<Self, MouseDeltaError> {
         if !x.is_finite() || !y.is_finite() {
             return Err(MouseDeltaError::NonFinite);
         }

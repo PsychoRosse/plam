@@ -1,5 +1,7 @@
 use crate::Vec3Error;
 
+use std::ops::{Add, Div, Mul, Neg, Sub};
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 
@@ -28,7 +30,6 @@ impl Vec3 {
     }
 
     #[inline]
-    #[must_use]
     pub const fn new(x: f32, y: f32, z: f32) -> Result<Self, Vec3Error> {
         if !x.is_finite() || !y.is_finite() || !z.is_finite() {
             return Err(Vec3Error::NonFiniteInput);
@@ -40,7 +41,6 @@ impl Vec3 {
 
 impl Vec3 {
     #[inline]
-    #[must_use]
     pub const fn splat(value: f32) -> Result<Self, Vec3Error> {
         Self::new(value, value, value)
     }
@@ -58,7 +58,6 @@ impl Vec3 {
     }
 
     #[inline]
-    #[must_use]
     pub fn length_squared(self) -> Result<f32, Vec3Error> {
         self.ensure_finite()?;
 
@@ -72,7 +71,6 @@ impl Vec3 {
     }
 
     #[inline]
-    #[must_use]
     pub fn length(self) -> Result<f32, Vec3Error> {
         self.ensure_finite()?;
 
@@ -97,7 +95,6 @@ impl Vec3 {
     }
 
     #[inline]
-    #[must_use]
     pub fn dot(self, other: Self) -> Result<f32, Vec3Error> {
         self.ensure_finite()?;
         other.ensure_finite()?;
@@ -112,7 +109,6 @@ impl Vec3 {
     }
 
     #[inline]
-    #[must_use]
     pub fn cross(self, other: Self) -> Result<Self, Vec3Error> {
         self.ensure_finite()?;
         other.ensure_finite()?;
@@ -125,7 +121,6 @@ impl Vec3 {
     }
 
     #[inline]
-    #[must_use]
     pub fn try_normalize(self) -> Result<Self, Vec3Error> {
         self.ensure_finite()?;
 
@@ -155,81 +150,6 @@ impl Vec3 {
     }
 
     #[inline]
-    #[must_use]
-    pub fn add(self, other: Self) -> Result<Self, Vec3Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        Self::new(self.x + other.x, self.y + other.y, self.z + other.z)
-            .map_err(|_| Vec3Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn sub(self, other: Self) -> Result<Self, Vec3Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        Self::new(self.x - other.x, self.y - other.y, self.z - other.z)
-            .map_err(|_| Vec3Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn mul(self, other: Self) -> Result<Self, Vec3Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        Self::new(self.x * other.x, self.y * other.y, self.z * other.z)
-            .map_err(|_| Vec3Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn div(self, other: Self) -> Result<Self, Vec3Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        if other.x == 0.0 || other.y == 0.0 || other.z == 0.0 {
-            return Err(Vec3Error::DivisionByZero);
-        }
-
-        Self::new(self.x / other.x, self.y / other.y, self.z / other.z)
-            .map_err(|_| Vec3Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn scale(self, scalar: f32) -> Result<Self, Vec3Error> {
-        self.ensure_finite()?;
-
-        if !scalar.is_finite() {
-            return Err(Vec3Error::NonFiniteInput);
-        }
-
-        Self::new(self.x * scalar, self.y * scalar, self.z * scalar)
-            .map_err(|_| Vec3Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn div_scalar(self, scalar: f32) -> Result<Self, Vec3Error> {
-        self.ensure_finite()?;
-
-        if !scalar.is_finite() {
-            return Err(Vec3Error::NonFiniteInput);
-        }
-
-        if scalar == 0.0 {
-            return Err(Vec3Error::DivisionByZero);
-        }
-
-        Self::new(self.x / scalar, self.y / scalar, self.z / scalar)
-            .map_err(|_| Vec3Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
     pub fn distance(self, other: Self) -> Result<f32, Vec3Error> {
         self.ensure_finite()?;
         other.ensure_finite()?;
@@ -242,26 +162,120 @@ impl Vec3 {
 
     #[inline]
     #[must_use]
-    pub fn neg(self) -> Result<Self, Vec3Error> {
-        self.ensure_finite()?;
-
-        Self::new(-self.x, -self.y, -self.z).map_err(|_| Vec3Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
     pub const fn to_array(self) -> [f32; 3] {
         [self.x, self.y, self.z]
     }
 
     #[inline]
-    #[must_use]
     fn ensure_finite(self) -> Result<(), Vec3Error> {
         if self.is_finite() {
             Ok(())
         } else {
             Err(Vec3Error::NonFiniteInput)
         }
+    }
+}
+
+impl Neg for Vec3 {
+    type Output = Result<Self, Vec3Error>;
+    
+    #[inline]
+    fn neg(self) -> Self::Output {
+        self.ensure_finite()?;
+
+        Self::new(-self.x, -self.y, -self.z).map_err(|_| Vec3Error::InvalidResult)
+    }
+}
+
+impl Add for Vec3 {
+    type Output = Result<Self, Vec3Error>;
+
+    #[inline]
+    fn add(self, other: Self) -> Self::Output {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        Self::new(self.x + other.x, self.y + other.y, self.z + other.z)
+            .map_err(|_| Vec3Error::InvalidResult)
+    }
+}
+
+impl Sub for Vec3 {
+    type Output = Result<Self, Vec3Error>;
+
+    #[inline]
+    fn sub(self, other: Self) -> Self::Output {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        Self::new(self.x - other.x, self.y - other.y, self.z - other.z)
+            .map_err(|_| Vec3Error::InvalidResult)
+    }
+}
+
+impl Mul for Vec3 {
+    type Output = Result<Self, Vec3Error>;
+
+    #[inline]
+    fn mul(self, other: Self) -> Self::Output {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        Self::new(self.x * other.x, self.y * other.y, self.z * other.z)
+            .map_err(|_| Vec3Error::InvalidResult)
+    }
+}
+
+impl Div for Vec3 {
+    type Output = Result<Self, Vec3Error>;
+
+    #[inline]
+    fn div(self, other: Self) -> Self::Output {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        if other.x == 0.0 || other.y == 0.0 || other.z == 0.0 {
+            return Err(Vec3Error::DivisionByZero);
+        }
+
+        Self::new(self.x / other.x, self.y / other.y, self.z / other.z)
+            .map_err(|_| Vec3Error::InvalidResult)
+    }
+}
+
+impl Mul<f32> for Vec3 {
+    type Output = Result<Self, Vec3Error>;
+
+    #[inline]
+    fn mul(self, scalar: f32) -> Self::Output {
+        self.ensure_finite()?;
+
+        if !scalar.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
+
+        Self::new(self.x * scalar, self.y * scalar, self.z * scalar)
+            .map_err(|_| Vec3Error::InvalidResult)
+    }
+}
+
+impl Div<f32> for Vec3 {
+    type Output = Result<Self, Vec3Error>;
+
+    #[inline]
+    fn div(self, scalar: f32) -> Self::Output {
+        self.ensure_finite()?;
+
+        if !scalar.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
+
+        if scalar == 0.0 {
+            return Err(Vec3Error::DivisionByZero);
+        }
+
+        Self::new(self.x / scalar, self.y / scalar, self.z / scalar)
+            .map_err(|_| Vec3Error::InvalidResult)
     }
 }
 

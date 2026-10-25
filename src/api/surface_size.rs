@@ -2,6 +2,8 @@ use std::num::NonZero;
 
 #[cfg(feature = "clama")]
 use clama::Event;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 
 #[cfg_attr(feature = "clama", derive(Event))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -168,9 +170,6 @@ impl From<SurfaceSize> for (u32, u32) {
         (size.width(), size.height())
     }
 }
-
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 
 #[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for SurfaceSize {

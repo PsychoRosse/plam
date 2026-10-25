@@ -2,7 +2,6 @@ use crate::MouseScrollDelta;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-
 #[cfg(feature = "clama")]
 use clama::Event;
 

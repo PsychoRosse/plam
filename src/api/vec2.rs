@@ -1,5 +1,7 @@
 use crate::Vec2Error;
 
+use std::ops::{Add, Div, Mul, Sub};
+
 #[cfg(feature = "serde")]
 use serde::{
     Deserialize, Serialize, Serializer,
@@ -30,7 +32,6 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
     pub const fn new(x: f32, y: f32) -> Result<Self, Vec2Error> {
         if !x.is_finite() || !y.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -54,7 +55,6 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
     pub fn length_squared(self) -> Result<f32, Vec2Error> {
         self.ensure_finite()?;
 
@@ -68,7 +68,6 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
     pub fn length(self) -> Result<f32, Vec2Error> {
         self.ensure_finite()?;
 
@@ -92,7 +91,6 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
     pub fn dot(self, other: Self) -> Result<f32, Vec2Error> {
         self.ensure_finite()?;
         other.ensure_finite()?;
@@ -107,7 +105,6 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
     pub fn normalize(self) -> Result<Self, Vec2Error> {
         self.ensure_finite()?;
 
@@ -135,75 +132,6 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
-    pub fn add(self, other: Self) -> Result<Self, Vec2Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        Self::new(self.x + other.x, self.y + other.y).map_err(|_| Vec2Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn sub(self, other: Self) -> Result<Self, Vec2Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        Self::new(self.x - other.x, self.y - other.y).map_err(|_| Vec2Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn mul(self, other: Self) -> Result<Self, Vec2Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        Self::new(self.x * other.x, self.y * other.y).map_err(|_| Vec2Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn div(self, other: Self) -> Result<Self, Vec2Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        if other.x == 0.0 || other.y == 0.0 {
-            return Err(Vec2Error::DivisionByZero);
-        }
-
-        Self::new(self.x / other.x, self.y / other.y).map_err(|_| Vec2Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn scale(self, scalar: f32) -> Result<Self, Vec2Error> {
-        self.ensure_finite()?;
-
-        if !scalar.is_finite() {
-            return Err(Vec2Error::NonFiniteInput);
-        }
-
-        Self::new(self.x * scalar, self.y * scalar).map_err(|_| Vec2Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn div_scalar(self, scalar: f32) -> Result<Self, Vec2Error> {
-        self.ensure_finite()?;
-
-        if !scalar.is_finite() {
-            return Err(Vec2Error::NonFiniteInput);
-        }
-
-        if scalar == 0.0 {
-            return Err(Vec2Error::DivisionByZero);
-        }
-
-        Self::new(self.x / scalar, self.y / scalar).map_err(|_| Vec2Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
     pub fn distance(self, other: Self) -> Result<f32, Vec2Error> {
         self.ensure_finite()?;
         other.ensure_finite()?;
@@ -215,20 +143,104 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
     pub fn perpendicular(self) -> Result<Self, Vec2Error> {
         self.ensure_finite()?;
         Ok(Self::new_unchecked(-self.y, self.x))
     }
 
     #[inline]
-    #[must_use]
     const fn ensure_finite(self) -> Result<(), Vec2Error> {
         if self.is_finite() {
             Ok(())
         } else {
             Err(Vec2Error::NonFiniteInput)
         }
+    }
+}
+
+impl Add for Vec2 {
+    type Output = Result<Self, Vec2Error>;
+
+    #[inline]
+    fn add(self, other: Self) -> Self::Output {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        Self::new(self.x + other.x, self.y + other.y).map_err(|_| Vec2Error::InvalidResult)
+    }
+}
+
+impl Sub for Vec2 {
+    type Output = Result<Self, Vec2Error>;
+
+    #[inline]
+    fn sub(self, other: Self) -> Self::Output {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        Self::new(self.x - other.x, self.y - other.y).map_err(|_| Vec2Error::InvalidResult)
+    }
+}
+
+impl Mul for Vec2 {
+    type Output = Result<Self, Vec2Error>;
+
+    #[inline]
+    fn mul(self, other: Self) -> Self::Output {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        Self::new(self.x * other.x, self.y * other.y).map_err(|_| Vec2Error::InvalidResult)
+    }
+}
+
+impl Div for Vec2 {
+    type Output = Result<Self, Vec2Error>;
+
+    #[inline]
+    fn div(self, other: Self) -> Self::Output {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        if other.x == 0.0 || other.y == 0.0 {
+            return Err(Vec2Error::DivisionByZero);
+        }
+
+        Self::new(self.x / other.x, self.y / other.y).map_err(|_| Vec2Error::InvalidResult)
+    }
+}
+
+impl Mul<f32> for Vec2 {
+    type Output = Result<Self, Vec2Error>;
+
+    #[inline]
+    fn mul(self, scalar: f32) -> Self::Output {
+        self.ensure_finite()?;
+
+        if !scalar.is_finite() {
+            return Err(Vec2Error::NonFiniteInput);
+        }
+
+        Self::new(self.x * scalar, self.y * scalar).map_err(|_| Vec2Error::InvalidResult)
+    }
+}
+
+impl Div<f32> for Vec2 {
+    type Output = Result<Self, Vec2Error>;
+
+    #[inline]
+    fn div(self, scalar: f32) -> Self::Output {
+        self.ensure_finite()?;
+
+        if !scalar.is_finite() {
+            return Err(Vec2Error::NonFiniteInput);
+        }
+
+        if scalar == 0.0 {
+            return Err(Vec2Error::DivisionByZero);
+        }
+
+        Self::new(self.x / scalar, self.y / scalar).map_err(|_| Vec2Error::InvalidResult)
     }
 }
 

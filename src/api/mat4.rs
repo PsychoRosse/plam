@@ -1,5 +1,7 @@
 use crate::{Mat4Error, Quat, Vec3, Vec4};
 
+use std::ops::Mul;
+
 #[cfg(feature = "serde")]
 use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
@@ -43,7 +45,6 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn new(x_axis: Vec4, y_axis: Vec4, z_axis: Vec4, w_axis: Vec4) -> Result<Self, Mat4Error> {
         if !x_axis.is_finite() || !y_axis.is_finite() || !z_axis.is_finite() || !w_axis.is_finite()
         {
@@ -65,7 +66,6 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn from_cols(
         x_axis: Vec4,
         y_axis: Vec4,
@@ -76,7 +76,6 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn from_array(array: [f32; 16]) -> Result<Self, Mat4Error> {
         if !array.iter().all(|value| value.is_finite()) {
             return Err(Mat4Error::NonFiniteInput);
@@ -125,7 +124,6 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
     fn from_f64_array(array: [f64; 16]) -> Result<Self, Mat4Error> {
         let mut values = [0.0_f32; 16];
 
@@ -145,7 +143,6 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn from_translation(translation: Vec3) -> Result<Self, Mat4Error> {
         if !translation.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -161,7 +158,6 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn try_from_scale(scale: Vec3) -> Result<Self, Mat4Error> {
         if !scale.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -176,7 +172,6 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn from_quat(rotation: Quat) -> Result<Self, Mat4Error> {
         let q = rotation
             .normalize()
@@ -215,7 +210,6 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn from_scale_rotation_translation(
         scale: Vec3,
         rotation: Quat,
@@ -258,77 +252,12 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
-    pub fn mul_vec4(self, rhs: Vec4) -> Result<Vec4, Mat4Error> {
-        if !self.is_finite() || !rhs.is_finite() {
-            return Err(Mat4Error::NonFiniteInput);
-        }
-
-        let columns = self.to_cols_array_2d();
-        let v = rhs.to_array();
-        let mut result = [0.0_f64; 4];
-
-        for row in 0..4 {
-            for col in 0..4 {
-                result[row] += columns[col][row] as f64 * v[col] as f64;
-            }
-        }
-
-        let mut output = [0.0_f32; 4];
-
-        for i in 0..4 {
-            if !result[i].is_finite() || result[i].abs() > f32::MAX as f64 {
-                return Err(Mat4Error::InvalidResult);
-            }
-
-            output[i] = result[i] as f32;
-        }
-
-        Vec4::new(output[0], output[1], output[2], output[3]).map_err(|_| Mat4Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn mul(self, rhs: Self) -> Result<Self, Mat4Error> {
-        if !self.is_finite() || !rhs.is_finite() {
-            return Err(Mat4Error::NonFiniteInput);
-        }
-
-        let a = self.to_cols_array_2d();
-        let b = rhs.to_cols_array_2d();
-        let mut result = [0.0_f64; 16];
-
-        for col in 0..4 {
-            for row in 0..4 {
-                let mut sum = 0.0_f64;
-
-                for k in 0..4 {
-                    sum += a[k][row] as f64 * b[col][k] as f64;
-                }
-
-                result[col * 4 + row] = sum;
-            }
-        }
-
-        Self::from_f64_array(result)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn mul_assign(&mut self, rhs: Self) -> Result<(), Mat4Error> {
-        let result = self.mul(rhs)?;
-        *self = result;
-        Ok(())
-    }
-
-    #[inline]
-    #[must_use]
     pub fn transform_point3(self, point: Vec3) -> Result<Vec3, Mat4Error> {
         if !self.is_finite() || !point.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
         }
 
-        let result = self.mul_vec4(
+        let result = self.mul(
             Vec4::new(point.x, point.y, point.z, 1.0).map_err(|_| Mat4Error::InvalidResult)?,
         )?;
 
@@ -354,13 +283,12 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn transform_vector3(self, vector: Vec3) -> Result<Vec3, Mat4Error> {
         if !self.is_finite() || !vector.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
         }
 
-        let result = self.mul_vec4(
+        let result = self.mul(
             Vec4::new(vector.x, vector.y, vector.z, 0.0).map_err(|_| Mat4Error::InvalidResult)?,
         )?;
 
@@ -368,7 +296,6 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn transpose(self) -> Result<Self, Mat4Error> {
         if !self.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -385,7 +312,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
+    #[allow(clippy::needless_range_loop)]
     pub fn determinant(self) -> Result<f32, Mat4Error> {
         if !self.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -440,7 +367,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
+    #[allow(clippy::needless_range_loop)]
     pub fn inverse(self) -> Result<Self, Mat4Error> {
         if !self.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -503,7 +430,13 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use]
+    pub fn checked_mul_assign(&mut self, rhs: Self) -> Result<(), Mat4Error> {
+        let result = *self * rhs;
+        *self = result?;
+        Ok(())
+    }
+
+    #[inline]
     pub fn perspective_rh(
         fov_y_degrees: f32,
         aspect_ratio: f32,
@@ -552,6 +485,66 @@ impl Mat4 {
         ];
 
         Self::from_f64_array(array)
+    }
+}
+
+impl Mul<Vec4> for Mat4 {
+    type Output = Result<Vec4, Mat4Error>;
+
+    #[inline]
+    fn mul(self, rhs: Vec4) -> Self::Output {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        let columns = self.to_cols_array_2d();
+        let v = rhs.to_array();
+        let mut result = [0.0_f64; 4];
+
+        for row in 0..4 {
+            for col in 0..4 {
+                result[row] += columns[col][row] as f64 * v[col] as f64;
+            }
+        }
+
+        let mut output = [0.0_f32; 4];
+
+        for i in 0..4 {
+            if !result[i].is_finite() || result[i].abs() > f32::MAX as f64 {
+                return Err(Mat4Error::InvalidResult);
+            }
+
+            output[i] = result[i] as f32;
+        }
+
+        Vec4::new(output[0], output[1], output[2], output[3]).map_err(|_| Mat4Error::InvalidResult)
+    }
+}
+
+impl Mul for Mat4 {
+    type Output = Result<Self, Mat4Error>;
+    fn mul(self, rhs: Self) -> Self::Output {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        let a = self.to_cols_array_2d();
+        let b = rhs.to_cols_array_2d();
+        let mut result = [0.0_f64; 16];
+
+        for col in 0..4 {
+            for row in 0..4 {
+                let mut sum = 0.0_f64;
+
+                for k in 0..4 {
+                    sum += a[k][row] as f64 * b[col][k] as f64;
+                }
+
+                result[col * 4 + row] = sum;
+            }
+        }
+
+        Self::from_f64_array(result)
     }
 }
 

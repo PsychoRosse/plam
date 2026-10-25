@@ -1,5 +1,7 @@
 use crate::{Vec3, Vec3Error, Vec4Error};
 
+use std::ops::{Add, Div, Mul, Neg, Sub};
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 
@@ -25,14 +27,13 @@ impl Vec4 {
 }
 
 impl Vec4 {
-    #[must_use]
     #[inline]
+    #[must_use]
     pub(crate) const fn new_unchecked(x: f32, y: f32, z: f32, w: f32) -> Self {
         Self { x, y, z, w }
     }
 
     #[inline]
-    #[must_use]
     pub fn new(x: f32, y: f32, z: f32, w: f32) -> Result<Self, Vec4Error> {
         if !x.is_finite() || !y.is_finite() || !z.is_finite() || !w.is_finite() {
             return Err(Vec4Error::NonFiniteInput);
@@ -44,8 +45,7 @@ impl Vec4 {
 
 impl Vec4 {
     #[inline]
-    #[must_use]
-    pub fn try_splat(value: f32) -> Result<Self, Vec4Error> {
+    pub fn splat(value: f32) -> Result<Self, Vec4Error> {
         Self::new(value, value, value, value)
     }
 
@@ -68,7 +68,6 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn length_squared(self) -> Result<f32, Vec4Error> {
         self.ensure_finite()?;
 
@@ -82,14 +81,7 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn length(self) -> Result<f32, Vec4Error> {
-        self.length_stable()
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn length_stable(self) -> Result<f32, Vec4Error> {
         self.ensure_finite()?;
 
         let scale = self
@@ -119,7 +111,6 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn dot(self, other: Self) -> Result<f32, Vec4Error> {
         self.ensure_finite()?;
         other.ensure_finite()?;
@@ -134,7 +125,6 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use]
     pub fn normalize(self) -> Result<Self, Vec4Error> {
         self.ensure_finite()?;
 
@@ -170,8 +160,87 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use]
-    pub fn add(self, other: Self) -> Result<Self, Vec4Error> {
+    pub fn abs(self) -> Result<Self, Vec4Error> {
+        self.ensure_finite()?;
+
+        Self::new(self.x.abs(), self.y.abs(), self.z.abs(), self.w.abs())
+            .map_err(|_| Vec4Error::InvalidResult)
+    }
+
+    #[inline]
+    pub fn min(self, other: Self) -> Result<Self, Vec4Error> {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        Self::new(
+            self.x.min(other.x),
+            self.y.min(other.y),
+            self.z.min(other.z),
+            self.w.min(other.w),
+        )
+        .map_err(|_| Vec4Error::InvalidResult)
+    }
+
+    #[inline]
+    pub fn max(self, other: Self) -> Result<Self, Vec4Error> {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        Self::new(
+            self.x.max(other.x),
+            self.y.max(other.y),
+            self.z.max(other.z),
+            self.w.max(other.w),
+        )
+        .map_err(|_| Vec4Error::InvalidResult)
+    }
+
+    #[inline]
+    pub fn xyz(self) -> Result<Vec3, Vec3Error> {
+        Vec3::new(self.x, self.y, self.z)
+    }
+
+    #[inline]
+    pub fn distance(self, other: Self) -> Result<f32, Vec4Error> {
+        self.ensure_finite()?;
+        other.ensure_finite()?;
+
+        let delta = Self::new(
+            self.x - other.x,
+            self.y - other.y,
+            self.z - other.z,
+            self.w - other.w,
+        )
+        .map_err(|_| Vec4Error::InvalidResult)?;
+
+        delta.length()
+    }
+
+    #[inline]
+    pub(crate) fn ensure_finite(self) -> Result<(), Vec4Error> {
+        if self.is_finite() {
+            Ok(())
+        } else {
+            Err(Vec4Error::NonFiniteInput)
+        }
+    }
+}
+
+impl Neg for Vec4 {
+    type Output = Result<Self, Vec4Error>;
+    #[inline]
+    fn neg(self) -> Self::Output {
+        self.ensure_finite()?;
+
+        Self::new(-self.x, -self.y, -self.z, -self.w).map_err(|_| Vec4Error::InvalidResult)
+    }
+}
+
+impl Add for Vec4 {
+    type Output = Result<Self, Vec4Error>;
+
+    #[inline]
+    fn add(self, other: Self) -> Self::Output {
         self.ensure_finite()?;
         other.ensure_finite()?;
 
@@ -183,10 +252,13 @@ impl Vec4 {
         )
         .map_err(|_| Vec4Error::InvalidResult)
     }
+}
+
+impl Sub for Vec4 {
+    type Output = Result<Self, Vec4Error>;
 
     #[inline]
-    #[must_use]
-    pub fn sub(self, other: Self) -> Result<Self, Vec4Error> {
+    fn sub(self, other: Self) -> Self::Output {
         self.ensure_finite()?;
         other.ensure_finite()?;
 
@@ -198,10 +270,13 @@ impl Vec4 {
         )
         .map_err(|_| Vec4Error::InvalidResult)
     }
+}
+
+impl Mul for Vec4 {
+    type Output = Result<Self, Vec4Error>;
 
     #[inline]
-    #[must_use]
-    pub fn mul(self, other: Self) -> Result<Self, Vec4Error> {
+    fn mul(self, other: Self) -> Self::Output {
         self.ensure_finite()?;
         other.ensure_finite()?;
 
@@ -213,10 +288,13 @@ impl Vec4 {
         )
         .map_err(|_| Vec4Error::InvalidResult)
     }
+}
+
+impl Div for Vec4 {
+    type Output = Result<Self, Vec4Error>;
 
     #[inline]
-    #[must_use]
-    pub fn div(self, other: Self) -> Result<Self, Vec4Error> {
+    fn div(self, other: Self) -> Self::Output {
         self.ensure_finite()?;
         other.ensure_finite()?;
 
@@ -232,10 +310,13 @@ impl Vec4 {
         )
         .map_err(|_| Vec4Error::InvalidResult)
     }
+}
+
+impl Mul<f32> for Vec4 {
+    type Output = Result<Self, Vec4Error>;
 
     #[inline]
-    #[must_use]
-    pub fn scale(self, scalar: f32) -> Result<Self, Vec4Error> {
+    fn mul(self, scalar: f32) -> Self::Output {
         self.ensure_finite()?;
 
         if !scalar.is_finite() {
@@ -250,10 +331,13 @@ impl Vec4 {
         )
         .map_err(|_| Vec4Error::InvalidResult)
     }
+}
+
+impl Div<f32> for Vec4 {
+    type Output = Result<Self, Vec4Error>;
 
     #[inline]
-    #[must_use]
-    pub fn div_scalar(self, scalar: f32) -> Result<Self, Vec4Error> {
+    fn div(self, scalar: f32) -> Self::Output {
         self.ensure_finite()?;
 
         if !scalar.is_finite() {
@@ -271,86 +355,6 @@ impl Vec4 {
             self.w / scalar,
         )
         .map_err(|_| Vec4Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn abs(self) -> Result<Self, Vec4Error> {
-        self.ensure_finite()?;
-
-        Self::new(self.x.abs(), self.y.abs(), self.z.abs(), self.w.abs())
-            .map_err(|_| Vec4Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn min(self, other: Self) -> Result<Self, Vec4Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        Self::new(
-            self.x.min(other.x),
-            self.y.min(other.y),
-            self.z.min(other.z),
-            self.w.min(other.w),
-        )
-        .map_err(|_| Vec4Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn max(self, other: Self) -> Result<Self, Vec4Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        Self::new(
-            self.x.max(other.x),
-            self.y.max(other.y),
-            self.z.max(other.z),
-            self.w.max(other.w),
-        )
-        .map_err(|_| Vec4Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn xyz(self) -> Result<Vec3, Vec3Error> {
-        Vec3::new(self.x, self.y, self.z)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn distance(self, other: Self) -> Result<f32, Vec4Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
-
-        let delta = Self::new(
-            self.x - other.x,
-            self.y - other.y,
-            self.z - other.z,
-            self.w - other.w,
-        )
-        .map_err(|_| Vec4Error::InvalidResult)?;
-
-        delta.length()
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn neg(self) -> Result<Self, Vec4Error> {
-        self.ensure_finite()?;
-
-        Self::new(-self.x, -self.y, -self.z, -self.w).map_err(|_| Vec4Error::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    fn ensure_finite(self) -> Result<(), Vec4Error> {
-        if self.is_finite() {
-            Ok(())
-        } else {
-            Err(Vec4Error::NonFiniteInput)
-        }
     }
 }
 

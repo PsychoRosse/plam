@@ -1,5 +1,7 @@
 use crate::{QuatError, Vec3};
 
+use std::ops::{Add, Div, Mul, Neg, Sub};
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 
@@ -31,7 +33,6 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub const fn new(x: f32, y: f32, z: f32, w: f32) -> Result<Self, QuatError> {
         if !x.is_finite() || !y.is_finite() || !z.is_finite() || !w.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -43,13 +44,11 @@ impl Quat {
 
 impl Quat {
     #[inline]
-    #[must_use]
     pub const fn from_array(values: [f32; 4]) -> Result<Self, QuatError> {
         Self::new(values[0], values[1], values[2], values[3])
     }
 
     #[inline]
-    #[must_use]
     pub const fn splat(value: f32) -> Result<Self, QuatError> {
         Self::new(value, value, value, value)
     }
@@ -73,13 +72,11 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub fn xyz(self) -> Result<Vec3, QuatError> {
         Vec3::new(self.x, self.y, self.z).map_err(|_| QuatError::InvalidResult)
     }
 
     #[inline]
-    #[must_use]
     pub fn dot(self, rhs: Self) -> Result<f32, QuatError> {
         if !self.is_finite() || !rhs.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -95,13 +92,11 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub fn length_squared(self) -> Result<f32, QuatError> {
         self.dot(self)
     }
 
     #[inline]
-    #[must_use]
     pub fn length(self) -> Result<f32, QuatError> {
         if !self.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -134,7 +129,6 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub fn normalize(self) -> Result<Self, QuatError> {
         if !self.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -163,7 +157,6 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub fn conjugate(self) -> Result<Self, QuatError> {
         if !self.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -173,7 +166,6 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub fn inverse(self) -> Result<Self, QuatError> {
         if !self.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -212,101 +204,6 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
-    pub fn add(self, rhs: Self) -> Result<Self, QuatError> {
-        if !self.is_finite() || !rhs.is_finite() {
-            return Err(QuatError::NonFiniteInput);
-        }
-
-        Self::new(
-            self.x + rhs.x,
-            self.y + rhs.y,
-            self.z + rhs.z,
-            self.w + rhs.w,
-        )
-        .map_err(|_| QuatError::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn sub(self, rhs: Self) -> Result<Self, QuatError> {
-        if !self.is_finite() || !rhs.is_finite() {
-            return Err(QuatError::NonFiniteInput);
-        }
-
-        Self::new(
-            self.x - rhs.x,
-            self.y - rhs.y,
-            self.z - rhs.z,
-            self.w - rhs.w,
-        )
-        .map_err(|_| QuatError::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn mul(self, rhs: Self) -> Result<Self, QuatError> {
-        if !self.is_finite() || !rhs.is_finite() {
-            return Err(QuatError::NonFiniteInput);
-        }
-
-        Self::new(
-            self.w * rhs.x + self.x * rhs.w + self.y * rhs.z - self.z * rhs.y,
-            self.w * rhs.y - self.x * rhs.z + self.y * rhs.w + self.z * rhs.x,
-            self.w * rhs.z + self.x * rhs.y - self.y * rhs.x + self.z * rhs.w,
-            self.w * rhs.w - self.x * rhs.x - self.y * rhs.y - self.z * rhs.z,
-        )
-        .map_err(|_| QuatError::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn scale(self, scalar: f32) -> Result<Self, QuatError> {
-        if !self.is_finite() || !scalar.is_finite() {
-            return Err(QuatError::NonFiniteInput);
-        }
-
-        Self::new(
-            self.x * scalar,
-            self.y * scalar,
-            self.z * scalar,
-            self.w * scalar,
-        )
-        .map_err(|_| QuatError::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn div_scalar(self, scalar: f32) -> Result<Self, QuatError> {
-        if !self.is_finite() || !scalar.is_finite() {
-            return Err(QuatError::NonFiniteInput);
-        }
-
-        if scalar == 0.0 {
-            return Err(QuatError::DivisionByZero);
-        }
-
-        Self::new(
-            self.x / scalar,
-            self.y / scalar,
-            self.z / scalar,
-            self.w / scalar,
-        )
-        .map_err(|_| QuatError::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn neg(self) -> Result<Self, QuatError> {
-        if !self.is_finite() {
-            return Err(QuatError::NonFiniteInput);
-        }
-
-        Self::new(-self.x, -self.y, -self.z, -self.w).map_err(|_| QuatError::InvalidResult)
-    }
-
-    #[inline]
-    #[must_use]
     pub fn from_euler(x_degrees: f32, y_degrees: f32, z_degrees: f32) -> Result<Self, QuatError> {
         if !x_degrees.is_finite() || !y_degrees.is_finite() || !z_degrees.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -330,7 +227,6 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub fn from_axis_angle(axis: Vec3, degrees: f32) -> Result<Self, QuatError> {
         if !axis.is_finite() || !degrees.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -360,7 +256,6 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub fn from_scaled_axis(scaled_axis: Vec3) -> Result<Self, QuatError> {
         if !scaled_axis.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -397,25 +292,21 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub fn from_rotation_x(degrees: f32) -> Result<Self, QuatError> {
         Self::from_axis_angle(Vec3::RIGHT, degrees)
     }
 
     #[inline]
-    #[must_use]
     pub fn from_rotation_y(degrees: f32) -> Result<Self, QuatError> {
         Self::from_axis_angle(Vec3::UP, degrees)
     }
 
     #[inline]
-    #[must_use]
     pub fn from_rotation_z(degrees: f32) -> Result<Self, QuatError> {
         Self::from_axis_angle(Vec3::DOWN, degrees)
     }
 
     #[inline]
-    #[must_use]
     pub fn rotate_vec3(self, vector: Vec3) -> Result<Vec3, QuatError> {
         if !self.is_finite() || !vector.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -450,7 +341,6 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub fn to_axis_angle(self) -> Result<(Vec3, f32), QuatError> {
         let mut q = self.normalize()?;
 
@@ -479,6 +369,117 @@ impl Quat {
         }
 
         Ok((axis, angle))
+    }
+}
+
+impl Sub for Quat {
+    type Output = Result<Self, QuatError>;
+
+    #[inline]
+    fn sub(self, rhs: Self) -> Self::Output {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        Self::new(
+            self.x - rhs.x,
+            self.y - rhs.y,
+            self.z - rhs.z,
+            self.w - rhs.w,
+        )
+        .map_err(|_| QuatError::InvalidResult)
+    }
+}
+
+impl Mul for Quat {
+    type Output = Result<Self, QuatError>;
+
+    #[inline]
+    fn mul(self, rhs: Self) -> Self::Output {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        Self::new(
+            self.w * rhs.x + self.x * rhs.w + self.y * rhs.z - self.z * rhs.y,
+            self.w * rhs.y - self.x * rhs.z + self.y * rhs.w + self.z * rhs.x,
+            self.w * rhs.z + self.x * rhs.y - self.y * rhs.x + self.z * rhs.w,
+            self.w * rhs.w - self.x * rhs.x - self.y * rhs.y - self.z * rhs.z,
+        )
+        .map_err(|_| QuatError::InvalidResult)
+    }
+}
+
+impl Mul<f32> for Quat {
+    type Output = Result<Self, QuatError>;
+
+    #[inline]
+    fn mul(self, scalar: f32) -> Self::Output {
+        if !self.is_finite() || !scalar.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        Self::new(
+            self.x * scalar,
+            self.y * scalar,
+            self.z * scalar,
+            self.w * scalar,
+        )
+        .map_err(|_| QuatError::InvalidResult)
+    }
+}
+
+impl Div<f32> for Quat {
+    type Output = Result<Self, QuatError>;
+
+    #[inline]
+    fn div(self, scalar: f32) -> Self::Output {
+        if !self.is_finite() || !scalar.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        if scalar == 0.0 {
+            return Err(QuatError::DivisionByZero);
+        }
+
+        Self::new(
+            self.x / scalar,
+            self.y / scalar,
+            self.z / scalar,
+            self.w / scalar,
+        )
+        .map_err(|_| QuatError::InvalidResult)
+    }
+}
+
+impl Add for Quat {
+    type Output = Result<Self, QuatError>;
+    #[inline]
+    fn add(self, rhs: Self) -> Self::Output {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        Self::new(
+            self.x + rhs.x,
+            self.y + rhs.y,
+            self.z + rhs.z,
+            self.w + rhs.w,
+        )
+        .map_err(|_| QuatError::InvalidResult)
+    }
+}
+
+impl Neg for Quat {
+    type Output = Result<Self, QuatError>;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        if !self.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        Self::new(-self.x, -self.y, -self.z, -self.w).map_err(|_| QuatError::InvalidResult)
     }
 }
 
