@@ -5,7 +5,8 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 
-#[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[doc = include_str!("../../docs/api/Vec3.md")]
 pub struct Vec3 {
     pub(crate) x: f32,
     pub(crate) y: f32,
@@ -15,13 +16,16 @@ pub struct Vec3 {
 impl Vec3 {
     pub const ZERO: Self = Self::new_unchecked(0.0, 0.0, 0.0);
     pub const ONE: Self = Self::new_unchecked(1.0, 1.0, 1.0);
+
     pub const UP: Self = Self::new_unchecked(0.0, 1.0, 0.0);
     pub const DOWN: Self = Self::new_unchecked(0.0, -1.0, 0.0);
+
     pub const LEFT: Self = Self::new_unchecked(-1.0, 0.0, 0.0);
     pub const RIGHT: Self = Self::new_unchecked(1.0, 0.0, 0.0);
     pub const FORWARD: Self = Self::new_unchecked(0.0, 0.0, -1.0);
     pub const BACKWARD: Self = Self::new_unchecked(0.0, 0.0, 1.0);
 }
+
 impl Vec3 {
     #[inline]
     #[must_use]
@@ -30,6 +34,8 @@ impl Vec3 {
     }
 
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Vec3.new.md")]
     pub const fn new(x: f32, y: f32, z: f32) -> Result<Self, Vec3Error> {
         if !x.is_finite() || !y.is_finite() || !z.is_finite() {
             return Err(Vec3Error::NonFiniteInput);
@@ -41,25 +47,54 @@ impl Vec3 {
 
 impl Vec3 {
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Vec3.splat.md")]
     pub const fn splat(value: f32) -> Result<Self, Vec3Error> {
         Self::new(value, value, value)
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/Vec3.is_finite.md")]
     pub const fn is_finite(self) -> bool {
         self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/Vec3.is_zero.md")]
     pub const fn is_zero(self) -> bool {
         self.x == 0.0 && self.y == 0.0 && self.z == 0.0
     }
 
     #[inline]
-    pub fn length_squared(self) -> Result<f32, Vec3Error> {
-        self.ensure_finite()?;
+    #[must_use]
+    #[doc = include_str!("../../docs/api/methods/Vec3.x.md")]
+    pub const fn x(self) -> f32 {
+        self.x
+    }
+
+    #[inline]
+    #[must_use]
+    #[doc = include_str!("../../docs/api/methods/Vec3.y.md")]
+    pub const fn y(self) -> f32 {
+        self.y
+    }
+
+    #[inline]
+    #[must_use]
+    #[doc = include_str!("../../docs/api/methods/Vec3.z.md")]
+    pub const fn z(self) -> f32 {
+        self.z
+    }
+
+    #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Vec3.length_squared.md")]
+    pub const fn length_squared(self) -> Result<f32, Vec3Error> {
+        if !self.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
 
         let result = self.x * self.x + self.y * self.y + self.z * self.z;
 
@@ -71,6 +106,8 @@ impl Vec3 {
     }
 
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Vec3.length.md")]
     pub fn length(self) -> Result<f32, Vec3Error> {
         self.ensure_finite()?;
 
@@ -95,11 +132,18 @@ impl Vec3 {
     }
 
     #[inline]
-    pub fn dot(self, other: Self) -> Result<f32, Vec3Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Vec3.dot.md")]
+    pub const fn dot(self, other: Self) -> Result<f32, Vec3Error> {
+        if !self.is_finite() || !other.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
 
-        let result = self.x * other.x + self.y * other.y + self.z * other.z;
+        let result = self.x as f64 * other.x as f64
+            + self.y as f64 * other.y as f64
+            + self.z as f64 * other.z as f64;
+
+        let result = result as f32;
 
         if !result.is_finite() {
             return Err(Vec3Error::InvalidResult);
@@ -109,19 +153,27 @@ impl Vec3 {
     }
 
     #[inline]
-    pub fn cross(self, other: Self) -> Result<Self, Vec3Error> {
-        self.ensure_finite()?;
-        other.ensure_finite()?;
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Vec3.cross.md")]
+    pub const fn cross(self, other: Self) -> Result<Self, Vec3Error> {
+        if !self.is_finite() || !other.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
 
-        let x = self.y * other.z - self.z * other.y;
-        let y = self.z * other.x - self.x * other.z;
-        let z = self.x * other.y - self.y * other.x;
+        let x = self.y as f64 * other.z as f64 - self.z as f64 * other.y as f64;
+        let y = self.z as f64 * other.x as f64 - self.x as f64 * other.z as f64;
+        let z = self.x as f64 * other.y as f64 - self.y as f64 * other.x as f64;
 
-        Self::new(x, y, z).map_err(|_| Vec3Error::InvalidResult)
+        match Self::new(x as f32, y as f32, z as f32) {
+            Ok(value) => Ok(value),
+            Err(_) => Err(Vec3Error::InvalidResult),
+        }
     }
 
     #[inline]
-    pub fn try_normalize(self) -> Result<Self, Vec3Error> {
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Vec3.normalize.md")]
+    pub fn normalize(self) -> Result<Self, Vec3Error> {
         self.ensure_finite()?;
 
         let scale = self.x.abs().max(self.y.abs()).max(self.z.abs());
@@ -150,24 +202,58 @@ impl Vec3 {
     }
 
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Vec3.distance.md")]
     pub fn distance(self, other: Self) -> Result<f32, Vec3Error> {
         self.ensure_finite()?;
         other.ensure_finite()?;
 
-        let delta = Self::new(self.x - other.x, self.y - other.y, self.z - other.z)
-            .map_err(|_| Vec3Error::InvalidResult)?;
+        let dx = self.x as f64 - other.x as f64;
+        let dy = self.y as f64 - other.y as f64;
+        let dz = self.z as f64 - other.z as f64;
 
-        delta.length()
+        let result = (dx * dx + dy * dy + dz * dz).sqrt() as f32;
+
+        if !result.is_finite() {
+            return Err(Vec3Error::InvalidResult);
+        }
+
+        Ok(result)
+    }
+
+    #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Vec3.lerp.md")]
+    pub const fn lerp(self, other: Self, t: f32) -> Result<Self, Vec3Error> {
+        if !self.is_finite() || !other.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
+
+        if !t.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
+
+        let t = t as f64;
+
+        let x = (self.x as f64) + (other.x as f64 - self.x as f64) * t;
+        let y = (self.y as f64) + (other.y as f64 - self.y as f64) * t;
+        let z = (self.z as f64) + (other.z as f64 - self.z as f64) * t;
+
+        match Self::new(x as f32, y as f32, z as f32) {
+            Ok(value) => Ok(value),
+            Err(_) => Err(Vec3Error::InvalidResult),
+        }
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/Vec3.to_array.md")]
     pub const fn to_array(self) -> [f32; 3] {
         [self.x, self.y, self.z]
     }
 
     #[inline]
-    fn ensure_finite(self) -> Result<(), Vec3Error> {
+    const fn ensure_finite(self) -> Result<(), Vec3Error> {
         if self.is_finite() {
             Ok(())
         } else {
@@ -178,7 +264,7 @@ impl Vec3 {
 
 impl Neg for Vec3 {
     type Output = Result<Self, Vec3Error>;
-    
+
     #[inline]
     fn neg(self) -> Self::Output {
         self.ensure_finite()?;

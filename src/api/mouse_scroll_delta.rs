@@ -1,25 +1,28 @@
 use crate::MouseScrollDeltaError;
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 #[cfg(feature = "clama")]
 use clama::Event;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[cfg_attr(feature = "clama", derive(Event))]
-#[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[doc = include_str!("../../docs/api/MouseScrollDelta.md")]
 pub struct MouseScrollDelta {
     pub(crate) x: f32,
     pub(crate) y: f32,
 }
 
 impl MouseScrollDelta {
-    pub const DEFAULT_SCROLL_MULTIPLIER: f32 = 32.0;
+    pub const DEFAULT_MULTIPLIER: f32 = 32.0;
     pub const MAX_COMPONENT: f32 = 1_000_000.0;
 }
 
 impl MouseScrollDelta {
     #[inline]
-    pub fn new(x: f32, y: f32) -> Result<Self, MouseScrollDeltaError> {
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/MouseScrollDelta.new.md")]
+    pub const fn new(x: f32, y: f32) -> Result<Self, MouseScrollDeltaError> {
         if !x.is_finite() || !y.is_finite() {
             return Err(MouseScrollDeltaError::NonFinite);
         }
@@ -35,12 +38,14 @@ impl MouseScrollDelta {
 impl MouseScrollDelta {
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/MouseScrollDelta.x.md")]
     pub const fn x(&self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/MouseScrollDelta.y.md")]
     pub const fn y(&self) -> f32 {
         self.y
     }

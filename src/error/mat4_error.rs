@@ -4,7 +4,8 @@ use thiserror::Error;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Error, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Error, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[doc = include_str!("../../docs/api/Mat4Error.md")]
 pub enum Mat4Error {
     #[error("Matrix input contains non-finite values")]
     NonFiniteInput,
@@ -12,6 +13,12 @@ pub enum Mat4Error {
     SingularMatrix,
     #[error("Invalid perspective projection parameters")]
     InvalidPerspectiveParameters,
+    #[error("Invalid orthographic projection parameters")]
+    InvalidOrthographicParameters,
+    #[error(
+        "Invalid look-at parameters: eye and center coincide, or up is parallel to the view direction"
+    )]
+    InvalidLookAtParameters,
     #[error("Invalid quaternion")]
     InvalidQuaternion,
     #[error("Matrix operation produced a non-finite result")]

@@ -1,12 +1,13 @@
 use crate::{MouseDeltaError, MousePosition};
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 #[cfg(feature = "clama")]
 use clama::Event;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[cfg_attr(feature = "clama", derive(Event))]
-#[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[doc = include_str!("../../docs/api/MouseDelta.md")]
 pub struct MouseDelta {
     pub(crate) x: f32,
     pub(crate) y: f32,
@@ -14,12 +15,14 @@ pub struct MouseDelta {
 
 impl MouseDelta {
     pub const MAX_COMPONENT: f32 = 1_000_000.0;
-    pub const DEFAULT_MULTIPLE: f32 = 32.0;
+    pub const DEFAULT_MULTIPLIER: f32 = 32.0;
 }
 
 impl MouseDelta {
     #[inline]
-        pub const fn new(x: f32, y: f32) -> Result<Self, MouseDeltaError> {
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/MouseDelta.new.md")]
+    pub const fn new(x: f32, y: f32) -> Result<Self, MouseDeltaError> {
         if !x.is_finite() || !y.is_finite() {
             return Err(MouseDeltaError::NonFinite);
         }
@@ -35,18 +38,21 @@ impl MouseDelta {
 impl MouseDelta {
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/MouseDelta.x.md")]
     pub const fn x(&self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/MouseDelta.y.md")]
     pub const fn y(&self) -> f32 {
         self.y
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/MouseDelta.is_valid.md")]
     pub const fn is_valid(&self) -> bool {
         self.x.is_finite()
             && self.y.is_finite()
@@ -57,16 +63,23 @@ impl MouseDelta {
     }
 
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/MouseDelta.checked_add.md")]
     pub const fn checked_add(self, rhs: Self) -> Result<Self, MouseDeltaError> {
         Self::new(self.x + rhs.x, self.y + rhs.y)
     }
 
     #[inline]
-    pub fn checked_add_assign(&mut self, rhs: Self) -> Result<(), MouseDeltaError> {
-        let result = self.checked_add(rhs)?;
-        *self = result;
-
-        Ok(())
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/MouseDelta.checked_add_assign.md")]
+    pub const fn checked_add_assign(&mut self, rhs: Self) -> Result<(), MouseDeltaError> {
+        match self.checked_add(rhs) {
+            Ok(value) => {
+                *self = value;
+                Ok(())
+            }
+            Err(error) => Err(error),
+        }
     }
 }
 

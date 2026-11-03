@@ -1,12 +1,13 @@
 use crate::{MouseDelta, MouseDeltaError};
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 #[cfg(feature = "clama")]
 use clama::Event;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[cfg_attr(feature = "clama", derive(Event))]
-#[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[doc = include_str!("../../docs/api/MousePosition.md")]
 pub struct MousePosition {
     pub(crate) x: f32,
     pub(crate) y: f32,
@@ -18,6 +19,8 @@ impl MousePosition {
 
 impl MousePosition {
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/MousePosition.new.md")]
     pub const fn new(x: f32, y: f32) -> Result<Self, MouseDeltaError> {
         if !x.is_finite() || !y.is_finite() {
             return Err(MouseDeltaError::NonFinite);
@@ -34,18 +37,22 @@ impl MousePosition {
 impl MousePosition {
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/MousePosition.x.md")]
     pub const fn x(&self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/MousePosition.y.md")]
     pub const fn y(&self) -> f32 {
         self.y
     }
 
     #[inline]
-    pub fn checked_sub(self, rhs: Self) -> Result<MouseDelta, MouseDeltaError> {
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/MousePosition.checked_sub.md")]
+    pub const fn checked_sub(self, rhs: Self) -> Result<MouseDelta, MouseDeltaError> {
         MouseDelta::new(self.x - rhs.x, self.y - rhs.y)
     }
 }

@@ -6,7 +6,8 @@ use clama::Event;
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 
 #[cfg_attr(feature = "clama", derive(Event))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[doc = include_str!("../../docs/api/WindowSize.md")]
 pub struct WindowSize {
     pub(crate) width: NonZero<u32>,
     pub(crate) height: NonZero<u32>,
@@ -27,6 +28,7 @@ impl Default for WindowSize {
 impl WindowSize {
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.clamped.md")]
     pub fn clamped(width: u32, height: u32) -> Self {
         let width = width.clamp(1, Self::MAX_DIMENSION);
         let height = height.clamp(1, Self::MAX_DIMENSION);
@@ -64,30 +66,35 @@ impl WindowSize {
 impl WindowSize {
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.minimum.md")]
     pub fn minimum() -> Self {
         Self::clamped(1, 1)
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.hd.md")]
     pub fn hd() -> Self {
         Self::clamped(1280, 720)
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.fhd.md")]
     pub fn fhd() -> Self {
         Self::clamped(1920, 1080)
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.qhd.md")]
     pub fn qhd() -> Self {
         Self::clamped(2560, 1440)
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.uhd.md")]
     pub fn uhd() -> Self {
         Self::clamped(3840, 2160)
     }
@@ -96,54 +103,63 @@ impl WindowSize {
 impl WindowSize {
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.with_width.md")]
     pub fn with_width(self, width: u32) -> Self {
         Self::clamped(width, self.height.get())
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.with_height.md")]
     pub fn with_height(self, height: u32) -> Self {
         Self::clamped(self.width.get(), height)
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.width.md")]
     pub const fn width(self) -> u32 {
         self.width.get()
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.height.md")]
     pub const fn height(self) -> u32 {
         self.height.get()
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.area.md")]
     pub const fn area(self) -> u64 {
         self.width.get() as u64 * self.height.get() as u64
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.is_landscape.md")]
     pub const fn is_landscape(self) -> bool {
         self.width.get() > self.height.get()
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.is_portrait.md")]
     pub const fn is_portrait(self) -> bool {
         self.height.get() > self.width.get()
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.is_square.md")]
     pub const fn is_square(self) -> bool {
         self.width.get() == self.height.get()
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.min_dimension.md")]
     pub const fn min_dimension(self) -> u32 {
         if self.width.get() < self.height.get() {
             self.width.get()
@@ -154,6 +170,7 @@ impl WindowSize {
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/WindowSize.max_dimension.md")]
     pub const fn max_dimension(self) -> u32 {
         if self.width.get() > self.height.get() {
             self.width.get()
@@ -192,6 +209,18 @@ impl From<WindowSize> for (u32, u32) {
 }
 
 #[cfg(feature = "serde")]
+impl Serialize for WindowSize {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut state = serializer.serialize_struct("WindowSize", 2)?;
+
+        state.serialize_field("width", &self.width())?;
+        state.serialize_field("height", &self.height())?;
+
+        state.end()
+    }
+}
+
+#[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for WindowSize {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -206,17 +235,5 @@ impl<'de> Deserialize<'de> for WindowSize {
         let raw = RawWindowSize::deserialize(deserializer)?;
 
         Ok(Self::clamped(raw.width, raw.height))
-    }
-}
-
-#[cfg(feature = "serde")]
-impl Serialize for WindowSize {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut state = serializer.serialize_struct("WindowSize", 2)?;
-
-        state.serialize_field("width", &self.width())?;
-        state.serialize_field("height", &self.height())?;
-
-        state.end()
     }
 }

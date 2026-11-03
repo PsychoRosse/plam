@@ -8,7 +8,8 @@ use serde::{
     ser::{Error, SerializeStruct},
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[doc = include_str!("../../docs/api/Mat4.md")]
 pub struct Mat4 {
     pub(crate) x_axis: Vec4,
     pub(crate) y_axis: Vec4,
@@ -35,7 +36,12 @@ impl Default for Mat4 {
 impl Mat4 {
     #[inline]
     #[must_use]
-    const fn new_unchecked(x_axis: Vec4, y_axis: Vec4, z_axis: Vec4, w_axis: Vec4) -> Self {
+    pub(crate) const fn new_unchecked(
+        x_axis: Vec4,
+        y_axis: Vec4,
+        z_axis: Vec4,
+        w_axis: Vec4,
+    ) -> Self {
         Self {
             x_axis,
             y_axis,
@@ -45,7 +51,14 @@ impl Mat4 {
     }
 
     #[inline]
-    pub fn new(x_axis: Vec4, y_axis: Vec4, z_axis: Vec4, w_axis: Vec4) -> Result<Self, Mat4Error> {
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.new.md")]
+    pub const fn new(
+        x_axis: Vec4,
+        y_axis: Vec4,
+        z_axis: Vec4,
+        w_axis: Vec4,
+    ) -> Result<Self, Mat4Error> {
         if !x_axis.is_finite() || !y_axis.is_finite() || !z_axis.is_finite() || !w_axis.is_finite()
         {
             return Err(Mat4Error::NonFiniteInput);
@@ -58,6 +71,7 @@ impl Mat4 {
 impl Mat4 {
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/Mat4.is_finite.md")]
     pub const fn is_finite(self) -> bool {
         self.x_axis.is_finite()
             && self.y_axis.is_finite()
@@ -66,7 +80,9 @@ impl Mat4 {
     }
 
     #[inline]
-    pub fn from_cols(
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.from_cols.md")]
+    pub const fn from_cols(
         x_axis: Vec4,
         y_axis: Vec4,
         z_axis: Vec4,
@@ -76,9 +92,17 @@ impl Mat4 {
     }
 
     #[inline]
-    pub fn from_array(array: [f32; 16]) -> Result<Self, Mat4Error> {
-        if !array.iter().all(|value| value.is_finite()) {
-            return Err(Mat4Error::NonFiniteInput);
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.from_array.md")]
+    pub const fn from_array(array: [f32; 16]) -> Result<Self, Mat4Error> {
+        let mut index = 0;
+
+        while index < 16 {
+            if !array[index].is_finite() {
+                return Err(Mat4Error::NonFiniteInput);
+            }
+
+            index += 1;
         }
 
         Self::new(
@@ -91,6 +115,7 @@ impl Mat4 {
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/Mat4.to_array.md")]
     pub const fn to_array(self) -> [f32; 16] {
         [
             self.x_axis.x,
@@ -114,6 +139,7 @@ impl Mat4 {
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/Mat4.to_cols_array_2d.md")]
     pub const fn to_cols_array_2d(self) -> [[f32; 4]; 4] {
         [
             [self.x_axis.x, self.x_axis.y, self.x_axis.z, self.x_axis.w],
@@ -124,10 +150,13 @@ impl Mat4 {
     }
 
     #[inline]
-    fn from_f64_array(array: [f64; 16]) -> Result<Self, Mat4Error> {
+    const fn from_f64_array(array: [f64; 16]) -> Result<Self, Mat4Error> {
         let mut values = [0.0_f32; 16];
+        let mut index = 0;
 
-        for (index, value) in array.into_iter().enumerate() {
+        while index < 16 {
+            let value = array[index];
+
             if !value.is_finite() || value.abs() > f32::MAX as f64 {
                 return Err(Mat4Error::InvalidResult);
             }
@@ -137,41 +166,51 @@ impl Mat4 {
             if !values[index].is_finite() {
                 return Err(Mat4Error::InvalidResult);
             }
+
+            index += 1;
         }
 
-        Self::from_array(values).map_err(|_| Mat4Error::InvalidResult)
+        match Self::from_array(values) {
+            Ok(matrix) => Ok(matrix),
+            Err(_) => Err(Mat4Error::InvalidResult),
+        }
     }
 
     #[inline]
-    pub fn from_translation(translation: Vec3) -> Result<Self, Mat4Error> {
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.from_translation.md")]
+    pub const fn from_translation(translation: Vec3) -> Result<Self, Mat4Error> {
         if !translation.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
         }
 
         Self::new(
-            Vec4::new(1.0, 0.0, 0.0, 0.0).map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(0.0, 1.0, 0.0, 0.0).map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(0.0, 0.0, 1.0, 0.0).map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(translation.x, translation.y, translation.z, 1.0)
-                .map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::new_unchecked(1.0, 0.0, 0.0, 0.0),
+            Vec4::new_unchecked(0.0, 1.0, 0.0, 0.0),
+            Vec4::new_unchecked(0.0, 0.0, 1.0, 0.0),
+            Vec4::new_unchecked(translation.x, translation.y, translation.z, 1.0),
         )
     }
 
     #[inline]
-    pub fn try_from_scale(scale: Vec3) -> Result<Self, Mat4Error> {
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.try_from_scale.md")]
+    pub const fn try_from_scale(scale: Vec3) -> Result<Self, Mat4Error> {
         if !scale.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
         }
 
         Self::new(
-            Vec4::new(scale.x, 0.0, 0.0, 0.0).map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(0.0, scale.y, 0.0, 0.0).map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(0.0, 0.0, scale.z, 0.0).map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(0.0, 0.0, 0.0, 1.0).map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::new_unchecked(scale.x, 0.0, 0.0, 0.0),
+            Vec4::new_unchecked(0.0, scale.y, 0.0, 0.0),
+            Vec4::new_unchecked(0.0, 0.0, scale.z, 0.0),
+            Vec4::new_unchecked(0.0, 0.0, 0.0, 1.0),
         )
     }
 
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.from_quat.md")]
     pub fn from_quat(rotation: Quat) -> Result<Self, Mat4Error> {
         let q = rotation
             .normalize()
@@ -210,6 +249,8 @@ impl Mat4 {
     }
 
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.from_scale_rotation_translation.md")]
     pub fn from_scale_rotation_translation(
         scale: Vec3,
         rotation: Quat,
@@ -252,6 +293,8 @@ impl Mat4 {
     }
 
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.transform_point3.md")]
     pub fn transform_point3(self, point: Vec3) -> Result<Vec3, Mat4Error> {
         if !self.is_finite() || !point.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -283,6 +326,8 @@ impl Mat4 {
     }
 
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.transform_vector3.md")]
     pub fn transform_vector3(self, vector: Vec3) -> Result<Vec3, Mat4Error> {
         if !self.is_finite() || !vector.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -296,7 +341,9 @@ impl Mat4 {
     }
 
     #[inline]
-    pub fn transpose(self) -> Result<Self, Mat4Error> {
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.transpose.md")]
+    pub const fn transpose(self) -> Result<Self, Mat4Error> {
         if !self.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
         }
@@ -304,38 +351,50 @@ impl Mat4 {
         let a = self.to_cols_array_2d();
 
         Self::new(
-            Vec4::new(a[0][0], a[1][0], a[2][0], a[3][0]).map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(a[0][1], a[1][1], a[2][1], a[3][1]).map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(a[0][2], a[1][2], a[2][2], a[3][2]).map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(a[0][3], a[1][3], a[2][3], a[3][3]).map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::new_unchecked(a[0][0], a[1][0], a[2][0], a[3][0]),
+            Vec4::new_unchecked(a[0][1], a[1][1], a[2][1], a[3][1]),
+            Vec4::new_unchecked(a[0][2], a[1][2], a[2][2], a[3][2]),
+            Vec4::new_unchecked(a[0][3], a[1][3], a[2][3], a[3][3]),
         )
     }
 
     #[inline]
     #[allow(clippy::needless_range_loop)]
-    pub fn determinant(self) -> Result<f32, Mat4Error> {
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.determinant.md")]
+    pub const fn determinant(self) -> Result<f32, Mat4Error> {
         if !self.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
         }
 
         let array = self.to_array();
         let mut a = [[0.0_f64; 4]; 4];
+        let mut row = 0;
 
-        for row in 0..4 {
-            for col in 0..4 {
+        while row < 4 {
+            let mut col = 0;
+
+            while col < 4 {
                 a[row][col] = array[col * 4 + row] as f64;
+                col += 1;
             }
+
+            row += 1;
         }
 
         let mut determinant = 1.0_f64;
+        let mut col = 0;
 
-        for col in 0..4 {
+        while col < 4 {
             let mut pivot = col;
+            let mut scan = col + 1;
 
-            for row in (col + 1)..4 {
-                if a[row][col].abs() > a[pivot][col].abs() {
-                    pivot = row;
+            while scan < 4 {
+                if a[scan][col].abs() > a[pivot][col].abs() {
+                    pivot = scan;
                 }
+
+                scan += 1;
             }
 
             if a[pivot][col] == 0.0 {
@@ -350,13 +409,21 @@ impl Mat4 {
             let pivot_value = a[col][col];
             determinant *= pivot_value;
 
-            for row in (col + 1)..4 {
-                let factor = a[row][col] / pivot_value;
+            let mut target = col + 1;
 
-                for k in (col + 1)..4 {
-                    a[row][k] -= factor * a[col][k];
+            while target < 4 {
+                let factor = a[target][col] / pivot_value;
+                let mut k = col + 1;
+
+                while k < 4 {
+                    a[target][k] -= factor * a[col][k];
+                    k += 1;
                 }
+
+                target += 1;
             }
+
+            col += 1;
         }
 
         if !determinant.is_finite() || determinant.abs() > f32::MAX as f64 {
@@ -368,29 +435,41 @@ impl Mat4 {
 
     #[inline]
     #[allow(clippy::needless_range_loop)]
-    pub fn inverse(self) -> Result<Self, Mat4Error> {
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.inverse.md")]
+    pub const fn inverse(self) -> Result<Self, Mat4Error> {
         if !self.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
         }
 
         let array = self.to_array();
         let mut a = [[0.0_f64; 8]; 4];
+        let mut row = 0;
 
-        for row in 0..4 {
-            for col in 0..4 {
+        while row < 4 {
+            let mut col = 0;
+
+            while col < 4 {
                 a[row][col] = array[col * 4 + row] as f64;
+                col += 1;
             }
 
             a[row][row + 4] = 1.0;
+            row += 1;
         }
 
-        for col in 0..4 {
-            let mut pivot = col;
+        let mut col = 0;
 
-            for row in (col + 1)..4 {
-                if a[row][col].abs() > a[pivot][col].abs() {
-                    pivot = row;
+        while col < 4 {
+            let mut pivot = col;
+            let mut scan = col + 1;
+
+            while scan < 4 {
+                if a[scan][col].abs() > a[pivot][col].abs() {
+                    pivot = scan;
                 }
+
+                scan += 1;
             }
 
             if a[pivot][col] == 0.0 {
@@ -400,36 +479,52 @@ impl Mat4 {
             a.swap(pivot, col);
 
             let divisor = a[col][col];
+            let mut k = 0;
 
-            for k in 0..8 {
+            while k < 8 {
                 a[col][k] /= divisor;
+                k += 1;
             }
 
-            for row in 0..4 {
-                if row == col {
-                    continue;
+            let mut elim = 0;
+
+            while elim < 4 {
+                if elim != col {
+                    let factor = a[elim][col];
+                    let mut idx = 0;
+
+                    while idx < 8 {
+                        a[elim][idx] -= factor * a[col][idx];
+                        idx += 1;
+                    }
                 }
 
-                let factor = a[row][col];
-
-                for k in 0..8 {
-                    a[row][k] -= factor * a[col][k];
-                }
+                elim += 1;
             }
+
+            col += 1;
         }
 
         let mut inverse = [0.0_f64; 16];
+        let mut row = 0;
 
-        for row in 0..4 {
-            for col in 0..4 {
+        while row < 4 {
+            let mut col = 0;
+
+            while col < 4 {
                 inverse[col * 4 + row] = a[row][col + 4];
+                col += 1;
             }
+
+            row += 1;
         }
 
         Self::from_f64_array(inverse)
     }
 
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.checked_mul_assign.md")]
     pub fn checked_mul_assign(&mut self, rhs: Self) -> Result<(), Mat4Error> {
         let result = *self * rhs;
         *self = result?;
@@ -437,6 +532,8 @@ impl Mat4 {
     }
 
     #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.perspective_rh.md")]
     pub fn perspective_rh(
         fov_y_degrees: f32,
         aspect_ratio: f32,
@@ -485,6 +582,107 @@ impl Mat4 {
         ];
 
         Self::from_f64_array(array)
+    }
+
+    #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.orthographic_rh.md")]
+    pub const fn orthographic_rh(
+        left: f32,
+        right: f32,
+        bottom: f32,
+        top: f32,
+        near: f32,
+        far: f32,
+    ) -> Result<Self, Mat4Error> {
+        if !left.is_finite()
+            || !right.is_finite()
+            || !bottom.is_finite()
+            || !top.is_finite()
+            || !near.is_finite()
+            || !far.is_finite()
+        {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        if left == right || bottom == top || near == far {
+            return Err(Mat4Error::InvalidOrthographicParameters);
+        }
+
+        let (left, right, bottom, top, near, far) = (
+            left as f64,
+            right as f64,
+            bottom as f64,
+            top as f64,
+            near as f64,
+            far as f64,
+        );
+
+        let array = [
+            2.0 / (right - left),
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            2.0 / (top - bottom),
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -2.0 / (far - near),
+            0.0,
+            -(right + left) / (right - left),
+            -(top + bottom) / (top - bottom),
+            -(far + near) / (far - near),
+            1.0,
+        ];
+
+        Self::from_f64_array(array)
+    }
+
+    #[inline]
+    #[must_use = "fallible operation: handle the error"]
+    #[doc = include_str!("../../docs/api/methods/Mat4.look_at_rh.md")]
+    pub fn look_at_rh(eye: Vec3, center: Vec3, up: Vec3) -> Result<Self, Mat4Error> {
+        if !eye.is_finite() || !center.is_finite() || !up.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        let forward = (center - eye).map_err(|_| Mat4Error::InvalidResult)?;
+        let forward_length = forward.length().map_err(|_| Mat4Error::InvalidResult)?;
+
+        if forward_length == 0.0 {
+            return Err(Mat4Error::InvalidLookAtParameters);
+        }
+
+        let forward = (forward / forward_length).map_err(|_| Mat4Error::InvalidResult)?;
+
+        let side = forward.cross(up).map_err(|_| Mat4Error::InvalidResult)?;
+        let side_length = side.length().map_err(|_| Mat4Error::InvalidResult)?;
+
+        if side_length == 0.0 {
+            return Err(Mat4Error::InvalidLookAtParameters);
+        }
+
+        let side = (side / side_length).map_err(|_| Mat4Error::InvalidResult)?;
+        let up_corrected = side.cross(forward).map_err(|_| Mat4Error::InvalidResult)?;
+
+        let side_dot = side.dot(eye).map_err(|_| Mat4Error::InvalidResult)?;
+        let up_dot = up_corrected
+            .dot(eye)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+        let forward_dot = forward.dot(eye).map_err(|_| Mat4Error::InvalidResult)?;
+
+        Self::new(
+            Vec4::new(side.x, up_corrected.x, -forward.x, 0.0)
+                .map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::new(side.y, up_corrected.y, -forward.y, 0.0)
+                .map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::new(side.z, up_corrected.z, -forward.z, 0.0)
+                .map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::new(-side_dot, -up_dot, forward_dot, 1.0)
+                .map_err(|_| Mat4Error::InvalidResult)?,
+        )
     }
 }
 

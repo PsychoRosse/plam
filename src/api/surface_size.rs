@@ -6,7 +6,8 @@ use clama::Event;
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 
 #[cfg_attr(feature = "clama", derive(Event))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[doc = include_str!("../../docs/api/SurfaceSize.md")]
 pub struct SurfaceSize {
     pub(crate) width: NonZero<u32>,
     pub(crate) height: NonZero<u32>,
@@ -20,6 +21,7 @@ impl SurfaceSize {
 impl SurfaceSize {
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.clamped.md")]
     pub fn clamped(width: u32, height: u32) -> Self {
         let width = width.clamp(1, Self::MAX_DIMENSION);
         let height = height.clamp(1, Self::MAX_DIMENSION);
@@ -57,73 +59,112 @@ impl SurfaceSize {
 impl Default for SurfaceSize {
     #[inline]
     fn default() -> Self {
-        Self::clamped(1280, 720)
+        Self::hd()
     }
 }
 
 impl SurfaceSize {
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.hd.md")]
+    pub fn hd() -> Self {
+        Self::clamped(1280, 720)
+    }
+
+    #[inline]
+    #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.fhd.md")]
+    pub fn fhd() -> Self {
+        Self::clamped(1920, 1080)
+    }
+
+    #[inline]
+    #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.qhd.md")]
+    pub fn qhd() -> Self {
+        Self::clamped(2560, 1440)
+    }
+
+    #[inline]
+    #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.uhd.md")]
+    pub fn uhd() -> Self {
+        Self::clamped(3840, 2160)
+    }
+
+    #[inline]
+    #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.with_width.md")]
     pub fn with_width(self, width: u32) -> Self {
         Self::clamped(width, self.height())
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.with_height.md")]
     pub fn with_height(self, height: u32) -> Self {
         Self::clamped(self.width(), height)
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.minimum.md")]
     pub fn minimum() -> Self {
         Self::clamped(1, 1)
     }
 
     #[inline]
     #[must_use]
-    pub const fn width(&self) -> u32 {
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.width.md")]
+    pub const fn width(self) -> u32 {
         self.width.get()
     }
 
     #[inline]
     #[must_use]
-    pub const fn height(&self) -> u32 {
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.height.md")]
+    pub const fn height(self) -> u32 {
         self.height.get()
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.area.md")]
     pub const fn area(self) -> u64 {
         self.width.get() as u64 * self.height.get() as u64
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.aspect_ratio.md")]
     pub const fn aspect_ratio(self) -> f32 {
         self.width.get() as f32 / self.height.get() as f32
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.is_landscape.md")]
     pub const fn is_landscape(self) -> bool {
         self.width.get() > self.height.get()
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.is_portrait.md")]
     pub const fn is_portrait(self) -> bool {
         self.height.get() > self.width.get()
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.is_square.md")]
     pub const fn is_square(self) -> bool {
         self.width.get() == self.height.get()
     }
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.min_dimension.md")]
     pub const fn min_dimension(self) -> u32 {
         if self.width.get() < self.height.get() {
             self.width.get()
@@ -134,6 +175,7 @@ impl SurfaceSize {
 
     #[inline]
     #[must_use]
+    #[doc = include_str!("../../docs/api/methods/SurfaceSize.max_dimension.md")]
     pub const fn max_dimension(self) -> u32 {
         if self.width.get() > self.height.get() {
             self.width.get()
