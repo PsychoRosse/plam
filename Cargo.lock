@@ -5,8 +5,7 @@ version = 4
 [[package]]
 name = "clama"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49dba1c42e414246dee085a6fd4618acd98bd7043b3b766add126a2ccbf42ed9"
+source = "git+https://github.com/PsychoRosse/clama#09db267c8c3540c763acfa68f72d1463ba5bd171"
 dependencies = [
  "clama-macros",
  "serde",
@@ -16,8 +15,7 @@ dependencies = [
 [[package]]
 name = "clama-macros"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d86f1f0e02b07255284b4ee222403321652eacf5ddb7538fb3cb57023ca1f70c"
+source = "git+https://github.com/PsychoRosse/clama#09db267c8c3540c763acfa68f72d1463ba5bd171"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
