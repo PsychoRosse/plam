@@ -6,7 +6,6 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-#[doc = include_str!("../../docs/api/Quat.md")]
 pub struct Quat {
     pub(crate) x: f32,
     pub(crate) y: f32,
@@ -34,8 +33,7 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.new.md")]
+    #[must_use]
     pub const fn new(x: f32, y: f32, z: f32, w: f32) -> Result<Self, QuatError> {
         if !x.is_finite() || !y.is_finite() || !z.is_finite() || !w.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -43,75 +41,63 @@ impl Quat {
 
         Ok(Self::new_unchecked(x, y, z, w))
     }
-}
 
-impl Quat {
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.from_array.md")]
+    #[must_use]
     pub const fn from_array(values: [f32; 4]) -> Result<Self, QuatError> {
         Self::new(values[0], values[1], values[2], values[3])
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.splat.md")]
+    #[must_use]
     pub const fn splat(value: f32) -> Result<Self, QuatError> {
         Self::new(value, value, value, value)
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Quat.to_array.md")]
     pub const fn to_array(self) -> [f32; 4] {
         [self.x, self.y, self.z, self.w]
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Quat.is_finite.md")]
     pub const fn is_finite(self) -> bool {
         self.x.is_finite() && self.y.is_finite() && self.z.is_finite() && self.w.is_finite()
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Quat.is_zero.md")]
     pub const fn is_zero(self) -> bool {
         self.x == 0.0 && self.y == 0.0 && self.z == 0.0 && self.w == 0.0
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Quat.x.md")]
     pub const fn x(self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Quat.y.md")]
     pub const fn y(self) -> f32 {
         self.y
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Quat.z.md")]
     pub const fn z(self) -> f32 {
         self.z
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Quat.w.md")]
     pub const fn w(self) -> f32 {
         self.w
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.xyz.md")]
+    #[must_use]
     pub const fn xyz(self) -> Result<Vec3, QuatError> {
         match Vec3::new(self.x, self.y, self.z) {
             Ok(value) => Ok(value),
@@ -120,8 +106,7 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.dot.md")]
+    #[must_use]
     pub const fn dot(self, rhs: Self) -> Result<f32, QuatError> {
         if !self.is_finite() || !rhs.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -140,15 +125,13 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.length_squared.md")]
+    #[must_use]
     pub const fn length_squared(self) -> Result<f32, QuatError> {
         self.dot(self)
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.length.md")]
+    #[must_use]
     pub fn length(self) -> Result<f32, QuatError> {
         if !self.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -181,8 +164,7 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.normalize.md")]
+    #[must_use]
     pub fn normalize(self) -> Result<Self, QuatError> {
         if !self.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -211,8 +193,7 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.conjugate.md")]
+    #[must_use]
     pub const fn conjugate(self) -> Result<Self, QuatError> {
         if !self.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -225,21 +206,60 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.inverse.md")]
+    #[must_use]
+    pub fn is_normalized(self) -> bool {
+        if !self.is_finite() {
+            return false;
+        }
+
+        let length_squared = match self.length_squared() {
+            Ok(value) => value,
+            Err(_) => return false,
+        };
+
+        (length_squared - 1.0).abs() <= 1e-6
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn is_approx_eq(self, rhs: Self, epsilon: f32) -> bool {
+        if !self.is_finite() || !rhs.is_finite() || !epsilon.is_finite() || epsilon < 0.0 {
+            return false;
+        }
+
+        (self.x - rhs.x).abs() <= epsilon
+            && (self.y - rhs.y).abs() <= epsilon
+            && (self.z - rhs.z).abs() <= epsilon
+            && (self.w - rhs.w).abs() <= epsilon
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn is_rotation_eq(self, rhs: Self, epsilon: f32) -> Result<bool, QuatError> {
+        if !epsilon.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        if epsilon < 0.0 {
+            return Err(QuatError::InvalidResult);
+        }
+
+        let a = self.normalize()?;
+        let b = rhs.normalize()?;
+
+        let dot = a.dot(b)?.abs();
+
+        Ok((1.0 - dot).abs() <= epsilon)
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn inverse(self) -> Result<Self, QuatError> {
         if !self.is_finite() {
             return Err(QuatError::NonFiniteInput);
         }
 
-        let scale = self
-            .x
-            .abs()
-            .max(self.y.abs())
-            .max(self.z.abs())
-            .max(self.w.abs());
-
-        if scale == 0.0 {
+        if self.is_zero() {
             return Err(QuatError::ZeroLength);
         }
 
@@ -268,8 +288,7 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.from_euler.md")]
+    #[must_use]
     pub fn from_euler(x_degrees: f32, y_degrees: f32, z_degrees: f32) -> Result<Self, QuatError> {
         if !x_degrees.is_finite() || !y_degrees.is_finite() || !z_degrees.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -293,8 +312,7 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.from_axis_angle.md")]
+    #[must_use]
     pub fn from_axis_angle(axis: Vec3, degrees: f32) -> Result<Self, QuatError> {
         if !axis.is_finite() || !degrees.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -324,8 +342,7 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.from_scaled_axis.md")]
+    #[must_use]
     pub fn from_scaled_axis(scaled_axis: Vec3) -> Result<Self, QuatError> {
         if !scaled_axis.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -344,13 +361,16 @@ impl Quat {
         let x = scaled_axis.x / scale;
         let y = scaled_axis.y / scale;
         let z = scaled_axis.z / scale;
+
         let scaled_length = (x * x + y * y + z * z).sqrt();
 
         let angle = (scale as f64) * (scaled_length as f64);
-        let angle = angle.rem_euclid(360.0) as f32;
+        let half_angle = angle.rem_euclid(360.0).to_radians() * 0.5;
 
-        let half_angle = angle.to_radians() * 0.5;
         let (sin, cos) = half_angle.sin_cos();
+
+        let sin = sin as f32;
+        let cos = cos as f32;
 
         Self::new(
             (x / scaled_length) * sin,
@@ -362,29 +382,25 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.from_rotation_x.md")]
+    #[must_use]
     pub fn from_rotation_x(degrees: f32) -> Result<Self, QuatError> {
         Self::from_axis_angle(Vec3::RIGHT, degrees)
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.from_rotation_y.md")]
+    #[must_use]
     pub fn from_rotation_y(degrees: f32) -> Result<Self, QuatError> {
         Self::from_axis_angle(Vec3::UP, degrees)
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.from_rotation_z.md")]
+    #[must_use]
     pub fn from_rotation_z(degrees: f32) -> Result<Self, QuatError> {
         Self::from_axis_angle(Vec3::BACKWARD, degrees)
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.rotate_vec3.md")]
+    #[must_use]
     pub fn rotate_vec3(self, vector: Vec3) -> Result<Vec3, QuatError> {
         if !self.is_finite() || !vector.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -419,8 +435,7 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.to_axis_angle.md")]
+    #[must_use]
     pub fn to_axis_angle(self) -> Result<(Vec3, f32), QuatError> {
         let mut q = self.normalize()?;
 
@@ -452,8 +467,7 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Quat.slerp.md")]
+    #[must_use]
     pub fn slerp(self, end: Self, t: f32) -> Result<Self, QuatError> {
         if !self.is_finite() || !end.is_finite() || !t.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -463,13 +477,21 @@ impl Quat {
         let mut end = end.normalize()?;
         let mut dot = start.dot(end)?;
 
+        if t == 0.0 {
+            return Ok(start);
+        }
+
+        if t == 1.0 {
+            return Ok(end);
+        }
+
         if dot < 0.0 {
             end = end.neg()?;
             dot = -dot;
         }
 
-        // Near-parallel quaternions: the spherical path is numerically
-        // unstable (sin(theta) → 0), so fall back to lerp + normalize.
+        dot = dot.clamp(0.0, 1.0);
+
         const DOT_THRESHOLD: f32 = 0.9995;
 
         if dot > DOT_THRESHOLD {
@@ -544,6 +566,15 @@ impl Mul<f32> for Quat {
             self.w * scalar,
         )
         .map_err(|_| QuatError::InvalidResult)
+    }
+}
+
+impl Mul<Quat> for f32 {
+    type Output = Result<Quat, QuatError>;
+
+    #[inline]
+    fn mul(self, rhs: Quat) -> Self::Output {
+        rhs * self
     }
 }
 

@@ -7,7 +7,6 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[cfg_attr(feature = "clama", derive(Event))]
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-#[doc = include_str!("../../docs/api/MousePosition.md")]
 pub struct MousePosition {
     pub(crate) x: f32,
     pub(crate) y: f32,
@@ -19,8 +18,7 @@ impl MousePosition {
 
 impl MousePosition {
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/MousePosition.new.md")]
+    #[must_use]
     pub const fn new(x: f32, y: f32) -> Result<Self, MouseDeltaError> {
         if !x.is_finite() || !y.is_finite() {
             return Err(MouseDeltaError::NonFinite);
@@ -32,28 +30,69 @@ impl MousePosition {
 
         Ok(Self { x, y })
     }
-}
 
-impl MousePosition {
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/MousePosition.x.md")]
     pub const fn x(&self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/MousePosition.y.md")]
     pub const fn y(&self) -> f32 {
         self.y
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/MousePosition.checked_sub.md")]
+    #[must_use]
     pub const fn checked_sub(self, rhs: Self) -> Result<MouseDelta, MouseDeltaError> {
         MouseDelta::new(self.x - rhs.x, self.y - rhs.y)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn checked_add(self, rhs: MouseDelta) -> Result<Self, MouseDeltaError> {
+        Self::new(self.x + rhs.x, self.y + rhs.y)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn from_array(values: [f32; 2]) -> Result<Self, MouseDeltaError> {
+        Self::new(values[0], values[1])
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn to_array(self) -> [f32; 2] {
+        [self.x, self.y]
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn is_finite(&self) -> bool {
+        self.x.is_finite() && self.y.is_finite()
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn is_zero(&self) -> bool {
+        self.x == 0.0 && self.y == 0.0
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn distance(self, rhs: Self) -> f32 {
+        (self.x - rhs.x).hypot(self.y - rhs.y)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn lerp(self, end: Self, t: f32) -> Result<Self, MouseDeltaError> {
+        if !t.is_finite() {
+            return Err(MouseDeltaError::NonFinite);
+        }
+
+        Self::new(self.x + (end.x - self.x) * t, self.y + (end.y - self.y) * t)
     }
 }
 

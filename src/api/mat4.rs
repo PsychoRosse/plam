@@ -9,7 +9,6 @@ use serde::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-#[doc = include_str!("../../docs/api/Mat4.md")]
 pub struct Mat4 {
     pub(crate) x_axis: Vec4,
     pub(crate) y_axis: Vec4,
@@ -51,8 +50,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.new.md")]
+    #[must_use]
     pub const fn new(
         x_axis: Vec4,
         y_axis: Vec4,
@@ -66,12 +64,9 @@ impl Mat4 {
 
         Ok(Self::new_unchecked(x_axis, y_axis, z_axis, w_axis))
     }
-}
 
-impl Mat4 {
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Mat4.is_finite.md")]
     pub const fn is_finite(self) -> bool {
         self.x_axis.is_finite()
             && self.y_axis.is_finite()
@@ -80,8 +75,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.from_cols.md")]
+    #[must_use]
     pub const fn from_cols(
         x_axis: Vec4,
         y_axis: Vec4,
@@ -92,8 +86,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.from_array.md")]
+    #[must_use]
     pub const fn from_array(array: [f32; 16]) -> Result<Self, Mat4Error> {
         let mut index = 0;
 
@@ -115,7 +108,6 @@ impl Mat4 {
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Mat4.to_array.md")]
     pub const fn to_array(self) -> [f32; 16] {
         [
             self.x_axis.x,
@@ -139,7 +131,6 @@ impl Mat4 {
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Mat4.to_cols_array_2d.md")]
     pub const fn to_cols_array_2d(self) -> [[f32; 4]; 4] {
         [
             [self.x_axis.x, self.x_axis.y, self.x_axis.z, self.x_axis.w],
@@ -177,8 +168,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.from_translation.md")]
+    #[must_use]
     pub const fn from_translation(translation: Vec3) -> Result<Self, Mat4Error> {
         if !translation.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -193,8 +183,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.try_from_scale.md")]
+    #[must_use]
     pub const fn try_from_scale(scale: Vec3) -> Result<Self, Mat4Error> {
         if !scale.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -209,8 +198,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.from_quat.md")]
+    #[must_use]
     pub fn from_quat(rotation: Quat) -> Result<Self, Mat4Error> {
         let q = rotation
             .normalize()
@@ -249,8 +237,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.from_scale_rotation_translation.md")]
+    #[must_use]
     pub fn from_scale_rotation_translation(
         scale: Vec3,
         rotation: Quat,
@@ -293,8 +280,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.transform_point3.md")]
+    #[must_use]
     pub fn transform_point3(self, point: Vec3) -> Result<Vec3, Mat4Error> {
         if !self.is_finite() || !point.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -326,8 +312,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.transform_vector3.md")]
+    #[must_use]
     pub fn transform_vector3(self, vector: Vec3) -> Result<Vec3, Mat4Error> {
         if !self.is_finite() || !vector.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -341,8 +326,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.transpose.md")]
+    #[must_use]
     pub const fn transpose(self) -> Result<Self, Mat4Error> {
         if !self.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -359,9 +343,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[allow(clippy::needless_range_loop)]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.determinant.md")]
+    #[must_use]
     pub const fn determinant(self) -> Result<f32, Mat4Error> {
         if !self.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -434,9 +416,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[allow(clippy::needless_range_loop)]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.inverse.md")]
+    #[must_use]
     pub const fn inverse(self) -> Result<Self, Mat4Error> {
         if !self.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -523,8 +503,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.checked_mul_assign.md")]
+    #[must_use]
     pub fn checked_mul_assign(&mut self, rhs: Self) -> Result<(), Mat4Error> {
         let result = *self * rhs;
         *self = result?;
@@ -532,8 +511,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.perspective_rh.md")]
+    #[must_use]
     pub fn perspective_rh(
         fov_y_degrees: f32,
         aspect_ratio: f32,
@@ -585,8 +563,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.orthographic_rh.md")]
+    #[must_use]
     pub const fn orthographic_rh(
         left: f32,
         right: f32,
@@ -641,8 +618,7 @@ impl Mat4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Mat4.look_at_rh.md")]
+    #[must_use]
     pub fn look_at_rh(eye: Vec3, center: Vec3, up: Vec3) -> Result<Self, Mat4Error> {
         if !eye.is_finite() || !center.is_finite() || !up.is_finite() {
             return Err(Mat4Error::NonFiniteInput);
@@ -684,6 +660,29 @@ impl Mat4 {
                 .map_err(|_| Mat4Error::InvalidResult)?,
         )
     }
+
+    #[inline]
+    #[must_use]
+    pub fn is_approx_eq(self, rhs: Self, epsilon: f32) -> bool {
+        if !epsilon.is_finite() || epsilon < 0.0 {
+            return false;
+        }
+
+        let a = self.to_array();
+        let b = rhs.to_array();
+
+        let mut i = 0;
+
+        while i < 16 {
+            if (a[i] - b[i]).abs() > epsilon {
+                return false;
+            }
+
+            i += 1;
+        }
+
+        true
+    }
 }
 
 impl Mul<Vec4> for Mat4 {
@@ -721,6 +720,8 @@ impl Mul<Vec4> for Mat4 {
 
 impl Mul for Mat4 {
     type Output = Result<Self, Mat4Error>;
+
+    #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         if !self.is_finite() || !rhs.is_finite() {
             return Err(Mat4Error::NonFiniteInput);

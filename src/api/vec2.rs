@@ -10,7 +10,6 @@ use serde::{
 };
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-#[doc = include_str!("../../docs/api/Vec2.md")]
 pub struct Vec2 {
     pub(crate) x: f32,
     pub(crate) y: f32,
@@ -34,8 +33,7 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec2.new.md")]
+    #[must_use]
     pub const fn new(x: f32, y: f32) -> Result<Self, Vec2Error> {
         if !x.is_finite() || !y.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -43,60 +41,66 @@ impl Vec2 {
 
         Ok(Self::new_unchecked(x, y))
     }
-}
-
-impl Vec2 {
+    
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec2.splat.md")]
+    #[must_use]
     pub const fn splat(value: f32) -> Result<Self, Vec2Error> {
         Self::new(value, value)
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec2.is_finite.md")]
     pub const fn is_finite(self) -> bool {
         self.x.is_finite() && self.y.is_finite()
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec2.is_zero.md")]
     pub const fn is_zero(self) -> bool {
         self.x == 0.0 && self.y == 0.0
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec2.x.md")]
     pub const fn x(self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec2.y.md")]
     pub const fn y(self) -> f32 {
         self.y
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec2.to_array.md")]
+    pub const fn with_x(self, x: f32) -> Result<Self, Vec2Error> {
+        Self::new(x, self.y)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn with_y(self, y: f32) -> Result<Self, Vec2Error> {
+        Self::new(self.x, y)
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn to_array(self) -> [f32; 2] {
         [self.x, self.y]
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec2.length_squared.md")]
+    #[must_use]
     pub const fn length_squared(self) -> Result<f32, Vec2Error> {
         if !self.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
         }
 
-        let result = self.x * self.x + self.y * self.y;
+        let x = self.x as f64;
+        let y = self.y as f64;
+
+        let result = (x * x + y * y) as f32;
 
         if !result.is_finite() {
             return Err(Vec2Error::InvalidResult);
@@ -106,8 +110,7 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec2.length.md")]
+    #[must_use]
     pub fn length(self) -> Result<f32, Vec2Error> {
         self.ensure_finite()?;
 
@@ -131,8 +134,7 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec2.dot.md")]
+    #[must_use]
     pub const fn dot(self, other: Self) -> Result<f32, Vec2Error> {
         if !self.is_finite() || !other.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -150,8 +152,7 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec2.normalize.md")]
+    #[must_use]
     pub fn normalize(self) -> Result<Self, Vec2Error> {
         self.ensure_finite()?;
 
@@ -179,8 +180,7 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec2.distance.md")]
+    #[must_use]
     pub fn distance(self, other: Self) -> Result<f32, Vec2Error> {
         self.ensure_finite()?;
         other.ensure_finite()?;
@@ -198,8 +198,7 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec2.lerp.md")]
+    #[must_use]
     pub const fn lerp(self, other: Self, t: f32) -> Result<Self, Vec2Error> {
         if !self.is_finite() || !other.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -221,8 +220,7 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec2.perpendicular.md")]
+    #[must_use]
     pub const fn perpendicular(self) -> Result<Self, Vec2Error> {
         if !self.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -316,6 +314,15 @@ impl Mul<f32> for Vec2 {
         }
 
         Self::new(self.x * scalar, self.y * scalar).map_err(|_| Vec2Error::InvalidResult)
+    }
+}
+
+impl Mul<Vec2> for f32 {
+    type Output = Result<Vec2, Vec2Error>;
+
+    #[inline]
+    fn mul(self, rhs: Vec2) -> Self::Output {
+        rhs * self
     }
 }
 

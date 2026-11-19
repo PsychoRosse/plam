@@ -1,5 +1,7 @@
 use crate::{MouseDeltaError, MousePosition};
 
+use std::ops::Mul;
+
 #[cfg(feature = "clama")]
 use clama::Event;
 #[cfg(feature = "serde")]
@@ -7,7 +9,6 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[cfg_attr(feature = "clama", derive(Event))]
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-#[doc = include_str!("../../docs/api/MouseDelta.md")]
 pub struct MouseDelta {
     pub(crate) x: f32,
     pub(crate) y: f32,
@@ -20,8 +21,7 @@ impl MouseDelta {
 
 impl MouseDelta {
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/MouseDelta.new.md")]
+    #[must_use]
     pub const fn new(x: f32, y: f32) -> Result<Self, MouseDeltaError> {
         if !x.is_finite() || !y.is_finite() {
             return Err(MouseDeltaError::NonFinite);
@@ -38,48 +38,108 @@ impl MouseDelta {
 impl MouseDelta {
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/MouseDelta.x.md")]
     pub const fn x(&self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/MouseDelta.y.md")]
     pub const fn y(&self) -> f32 {
         self.y
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/MouseDelta.is_valid.md")]
-    pub const fn is_valid(&self) -> bool {
-        self.x.is_finite()
-            && self.y.is_finite()
-            && self.x >= -Self::MAX_COMPONENT
-            && self.x <= Self::MAX_COMPONENT
-            && self.y >= -Self::MAX_COMPONENT
-            && self.y <= Self::MAX_COMPONENT
+    pub const fn is_finite(&self) -> bool {
+        self.x.is_finite() && self.y.is_finite()
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/MouseDelta.checked_add.md")]
+    #[must_use]
+    pub const fn is_zero(&self) -> bool {
+        self.x == 0.0 && self.y == 0.0
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn checked_add(self, rhs: Self) -> Result<Self, MouseDeltaError> {
         Self::new(self.x + rhs.x, self.y + rhs.y)
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/MouseDelta.checked_add_assign.md")]
-    pub const fn checked_add_assign(&mut self, rhs: Self) -> Result<(), MouseDeltaError> {
-        match self.checked_add(rhs) {
-            Ok(value) => {
-                *self = value;
-                Ok(())
-            }
-            Err(error) => Err(error),
+    #[must_use]
+    pub fn checked_add_assign(&mut self, rhs: Self) -> Result<(), MouseDeltaError> {
+        *self = self.checked_add(rhs)?;
+        Ok(())
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn checked_sub(self, rhs: Self) -> Result<Self, MouseDeltaError> {
+        Self::new(self.x - rhs.x, self.y - rhs.y)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn checked_sub_assign(&mut self, rhs: Self) -> Result<(), MouseDeltaError> {
+        *self = self.checked_sub(rhs)?;
+        Ok(())
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn scaled(self, multiplier: f32) -> Result<Self, MouseDeltaError> {
+        if !multiplier.is_finite() {
+            return Err(MouseDeltaError::NonFinite);
         }
+
+        Self::new(self.x * multiplier, self.y * multiplier)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn from_array(values: [f32; 2]) -> Result<Self, MouseDeltaError> {
+        Self::new(values[0], values[1])
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn to_array(self) -> [f32; 2] {
+        [self.x, self.y]
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn length(self) -> f32 {
+        self.x.hypot(self.y)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn is_approx_eq(self, rhs: Self, epsilon: f32) -> bool {
+        if !self.is_finite() || !rhs.is_finite() || !epsilon.is_finite() || epsilon < 0.0 {
+            return false;
+        }
+
+        (self.x - rhs.x).abs() <= epsilon && (self.y - rhs.y).abs() <= epsilon
+    }
+}
+
+impl Mul<f32> for MouseDelta {
+    type Output = Result<Self, MouseDeltaError>;
+
+    #[inline]
+    fn mul(self, scalar: f32) -> Self::Output {
+        self.scaled(scalar)
+    }
+}
+
+impl Mul<MouseDelta> for f32 {
+    type Output = Result<MouseDelta, MouseDeltaError>;
+
+    #[inline]
+    fn mul(self, rhs: MouseDelta) -> Self::Output {
+        rhs * self
     }
 }
 

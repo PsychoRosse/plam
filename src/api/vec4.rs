@@ -6,7 +6,6 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-#[doc = include_str!("../../docs/api/Vec4.md")]
 pub struct Vec4 {
     pub(crate) x: f32,
     pub(crate) y: f32,
@@ -17,12 +16,10 @@ pub struct Vec4 {
 impl Vec4 {
     pub const ZERO: Self = Self::new_unchecked(0.0, 0.0, 0.0, 0.0);
     pub const ONE: Self = Self::new_unchecked(1.0, 1.0, 1.0, 1.0);
-
     pub const UP: Self = Self::new_unchecked(0.0, 1.0, 0.0, 0.0);
     pub const DOWN: Self = Self::new_unchecked(0.0, -1.0, 0.0, 0.0);
     pub const LEFT: Self = Self::new_unchecked(-1.0, 0.0, 0.0, 0.0);
     pub const RIGHT: Self = Self::new_unchecked(1.0, 0.0, 0.0, 0.0);
-
     pub const FORWARD: Self = Self::new_unchecked(0.0, 0.0, -1.0, 0.0);
     pub const BACKWARD: Self = Self::new_unchecked(0.0, 0.0, 1.0, 0.0);
 }
@@ -35,8 +32,7 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.new.md")]
+    #[must_use]
     pub const fn new(x: f32, y: f32, z: f32, w: f32) -> Result<Self, Vec4Error> {
         if !x.is_finite() || !y.is_finite() || !z.is_finite() || !w.is_finite() {
             return Err(Vec4Error::NonFiniteInput);
@@ -44,74 +40,90 @@ impl Vec4 {
 
         Ok(Self::new_unchecked(x, y, z, w))
     }
-}
 
-impl Vec4 {
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.splat.md")]
+    #[must_use]
     pub const fn splat(value: f32) -> Result<Self, Vec4Error> {
         Self::new(value, value, value, value)
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec4.is_finite.md")]
     pub const fn is_finite(self) -> bool {
         self.x.is_finite() && self.y.is_finite() && self.z.is_finite() && self.w.is_finite()
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec4.is_zero.md")]
     pub const fn is_zero(self) -> bool {
         self.x == 0.0 && self.y == 0.0 && self.z == 0.0 && self.w == 0.0
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec4.x.md")]
     pub const fn x(self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec4.y.md")]
     pub const fn y(self) -> f32 {
         self.y
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec4.z.md")]
     pub const fn z(self) -> f32 {
         self.z
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec4.w.md")]
     pub const fn w(self) -> f32 {
         self.w
     }
 
     #[inline]
     #[must_use]
-    #[doc = include_str!("../../docs/api/methods/Vec4.to_array.md")]
+    pub const fn with_x(self, x: f32) -> Result<Self, Vec4Error> {
+        Self::new(x, self.y, self.z, self.w)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn with_y(self, y: f32) -> Result<Self, Vec4Error> {
+        Self::new(self.x, y, self.z, self.w)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn with_z(self, z: f32) -> Result<Self, Vec4Error> {
+        Self::new(self.x, self.y, z, self.w)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn with_w(self, w: f32) -> Result<Self, Vec4Error> {
+        Self::new(self.x, self.y, self.z, w)
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn to_array(self) -> [f32; 4] {
         [self.x, self.y, self.z, self.w]
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.length_squared.md")]
+    #[must_use]
     pub const fn length_squared(self) -> Result<f32, Vec4Error> {
         if !self.is_finite() {
             return Err(Vec4Error::NonFiniteInput);
         }
 
-        let result = self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w;
+        let result = (self.x as f64 * self.x as f64
+            + self.y as f64 * self.y as f64
+            + self.z as f64 * self.z as f64
+            + self.w as f64 * self.w as f64) as f32;
 
         if !result.is_finite() {
             return Err(Vec4Error::InvalidResult);
@@ -121,8 +133,7 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.length.md")]
+    #[must_use]
     pub fn length(self) -> Result<f32, Vec4Error> {
         self.ensure_finite()?;
 
@@ -153,8 +164,7 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.dot.md")]
+    #[must_use]
     pub const fn dot(self, other: Self) -> Result<f32, Vec4Error> {
         if !self.is_finite() || !other.is_finite() {
             return Err(Vec4Error::NonFiniteInput);
@@ -175,8 +185,7 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.normalize.md")]
+    #[must_use]
     pub fn normalize(self) -> Result<Self, Vec4Error> {
         self.ensure_finite()?;
 
@@ -212,8 +221,7 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.abs.md")]
+    #[must_use]
     pub const fn abs(self) -> Result<Self, Vec4Error> {
         if !self.is_finite() {
             return Err(Vec4Error::NonFiniteInput);
@@ -228,8 +236,7 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.min.md")]
+    #[must_use]
     pub const fn min(self, other: Self) -> Result<Self, Vec4Error> {
         if !self.is_finite() || !other.is_finite() {
             return Err(Vec4Error::NonFiniteInput);
@@ -244,8 +251,7 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.max.md")]
+    #[must_use]
     pub const fn max(self, other: Self) -> Result<Self, Vec4Error> {
         if !self.is_finite() || !other.is_finite() {
             return Err(Vec4Error::NonFiniteInput);
@@ -260,15 +266,13 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.xyz.md")]
+    #[must_use]
     pub const fn xyz(self) -> Result<Vec3, Vec3Error> {
         Vec3::new(self.x, self.y, self.z)
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.distance.md")]
+    #[must_use]
     pub fn distance(self, other: Self) -> Result<f32, Vec4Error> {
         self.ensure_finite()?;
         other.ensure_finite()?;
@@ -288,8 +292,7 @@ impl Vec4 {
     }
 
     #[inline]
-    #[must_use = "fallible operation: handle the error"]
-    #[doc = include_str!("../../docs/api/methods/Vec4.lerp.md")]
+    #[must_use]
     pub const fn lerp(self, other: Self, t: f32) -> Result<Self, Vec4Error> {
         if !self.is_finite() || !other.is_finite() {
             return Err(Vec4Error::NonFiniteInput);
@@ -313,7 +316,7 @@ impl Vec4 {
     }
 
     #[inline]
-    const fn ensure_finite(self) -> Result<(), Vec4Error> {
+    pub(crate) const fn ensure_finite(self) -> Result<(), Vec4Error> {
         if self.is_finite() {
             Ok(())
         } else {
@@ -427,6 +430,15 @@ impl Mul<f32> for Vec4 {
             self.w * scalar,
         )
         .map_err(|_| Vec4Error::InvalidResult)
+    }
+}
+
+impl Mul<Vec4> for f32 {
+    type Output = Result<Vec4, Vec4Error>;
+
+    #[inline]
+    fn mul(self, rhs: Vec4) -> Self::Output {
+        rhs * self
     }
 }
 
