@@ -1,5 +1,3 @@
-use std::num::NonZero;
-
 #[cfg(feature = "clama")]
 use clama::Event;
 #[cfg(feature = "serde")]
@@ -8,8 +6,8 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStru
 #[cfg_attr(feature = "clama", derive(Event))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SurfaceSize {
-    pub(crate) width: NonZero<u32>,
-    pub(crate) height: NonZero<u32>,
+    pub(crate) width: std::num::NonZero<u32>,
+    pub(crate) height: std::num::NonZero<u32>,
 }
 
 impl SurfaceSize {
@@ -55,8 +53,8 @@ impl SurfaceSize {
         }
 
         Self {
-            width: NonZero::<u32>::new(width).unwrap(),
-            height: NonZero::<u32>::new(height).unwrap(),
+            width: std::num::NonZero::<u32>::new(width).unwrap(),
+            height: std::num::NonZero::<u32>::new(height).unwrap(),
         }
     }
 
