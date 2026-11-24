@@ -1,16 +1,8 @@
-mod api;
-mod error;
-
+mod mat4;
 mod quat;
 mod vec2;
 mod vec3;
 mod vec4;
+mod window;
 
-pub mod prelude;
-
-pub use {api::*, error::*};
-
-pub use quat::*;
-pub use vec2::*;
-pub use vec3::*;
-pub use vec4::*;
+pub use {mat4::*, quat::*, vec2::*, vec3::*, vec4::*, window::*};
