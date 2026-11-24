@@ -87,39 +87,6 @@ impl Vec3 {
     pub const fn to_array(self) -> [f32; 3] {
         [self.x, self.y, self.z]
     }
-
-    #[inline]
-    pub const fn checked_with_x(self, x: f32) -> Result<Self, Vec3Error> {
-        Self::checked_new(x, self.y, self.z)
-    }
-
-    #[inline]
-    pub const fn checked_with_y(self, y: f32) -> Result<Self, Vec3Error> {
-        Self::checked_new(self.x, y, self.z)
-    }
-
-    #[inline]
-    pub const fn checked_with_z(self, z: f32) -> Result<Self, Vec3Error> {
-        Self::checked_new(self.x, self.y, z)
-    }
-
-    #[inline]
-    #[must_use]
-    pub const fn unchecked_with_x(self, x: f32) -> Self {
-        Self::unchecked_new(x, self.y, self.z)
-    }
-
-    #[inline]
-    #[must_use]
-    pub const fn unchecked_with_y(self, y: f32) -> Self {
-        Self::unchecked_new(self.x, y, self.z)
-    }
-
-    #[inline]
-    #[must_use]
-    pub const fn unchecked_with_z(self, z: f32) -> Self {
-        Self::unchecked_new(self.x, self.y, z)
-    }
 }
 
 #[cfg(feature = "serde")]

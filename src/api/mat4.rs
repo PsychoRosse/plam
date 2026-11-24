@@ -18,10 +18,10 @@ pub struct Mat4 {
 
 impl Mat4 {
     pub const IDENTITY: Self = Self::new_unchecked(
-        Vec4::new_unchecked(1.0, 0.0, 0.0, 0.0),
-        Vec4::new_unchecked(0.0, 1.0, 0.0, 0.0),
-        Vec4::new_unchecked(0.0, 0.0, 1.0, 0.0),
-        Vec4::new_unchecked(0.0, 0.0, 0.0, 1.0),
+        Vec4::unchecked_new(1.0, 0.0, 0.0, 0.0),
+        Vec4::unchecked_new(0.0, 1.0, 0.0, 0.0),
+        Vec4::unchecked_new(0.0, 0.0, 1.0, 0.0),
+        Vec4::unchecked_new(0.0, 0.0, 0.0, 1.0),
     );
 }
 
@@ -99,10 +99,10 @@ impl Mat4 {
         }
 
         Self::new(
-            Vec4::new_unchecked(array[0], array[1], array[2], array[3]),
-            Vec4::new_unchecked(array[4], array[5], array[6], array[7]),
-            Vec4::new_unchecked(array[8], array[9], array[10], array[11]),
-            Vec4::new_unchecked(array[12], array[13], array[14], array[15]),
+            Vec4::unchecked_new(array[0], array[1], array[2], array[3]),
+            Vec4::unchecked_new(array[4], array[5], array[6], array[7]),
+            Vec4::unchecked_new(array[8], array[9], array[10], array[11]),
+            Vec4::unchecked_new(array[12], array[13], array[14], array[15]),
         )
     }
 
@@ -175,10 +175,10 @@ impl Mat4 {
         }
 
         Self::new(
-            Vec4::new_unchecked(1.0, 0.0, 0.0, 0.0),
-            Vec4::new_unchecked(0.0, 1.0, 0.0, 0.0),
-            Vec4::new_unchecked(0.0, 0.0, 1.0, 0.0),
-            Vec4::new_unchecked(translation.x, translation.y, translation.z, 1.0),
+            Vec4::unchecked_new(1.0, 0.0, 0.0, 0.0),
+            Vec4::unchecked_new(0.0, 1.0, 0.0, 0.0),
+            Vec4::unchecked_new(0.0, 0.0, 1.0, 0.0),
+            Vec4::unchecked_new(translation.x, translation.y, translation.z, 1.0),
         )
     }
 
@@ -190,10 +190,10 @@ impl Mat4 {
         }
 
         Self::new(
-            Vec4::new_unchecked(scale.x, 0.0, 0.0, 0.0),
-            Vec4::new_unchecked(0.0, scale.y, 0.0, 0.0),
-            Vec4::new_unchecked(0.0, 0.0, scale.z, 0.0),
-            Vec4::new_unchecked(0.0, 0.0, 0.0, 1.0),
+            Vec4::unchecked_new(scale.x, 0.0, 0.0, 0.0),
+            Vec4::unchecked_new(0.0, scale.y, 0.0, 0.0),
+            Vec4::unchecked_new(0.0, 0.0, scale.z, 0.0),
+            Vec4::unchecked_new(0.0, 0.0, 0.0, 1.0),
         )
     }
 
@@ -222,16 +222,16 @@ impl Mat4 {
         let wy = w * y2;
         let wz = w * z2;
 
-        let x_axis = Vec4::new(1.0 - (yy + zz), xy + wz, xz - wy, 0.0)
+        let x_axis = Vec4::checked_new(1.0 - (yy + zz), xy + wz, xz - wy, 0.0)
             .map_err(|_| Mat4Error::InvalidResult)?;
 
-        let y_axis = Vec4::new(xy - wz, 1.0 - (xx + zz), yz + wx, 0.0)
+        let y_axis = Vec4::checked_new(xy - wz, 1.0 - (xx + zz), yz + wx, 0.0)
             .map_err(|_| Mat4Error::InvalidResult)?;
 
-        let z_axis = Vec4::new(xz + wy, yz - wx, 1.0 - (xx + yy), 0.0)
+        let z_axis = Vec4::checked_new(xz + wy, yz - wx, 1.0 - (xx + yy), 0.0)
             .map_err(|_| Mat4Error::InvalidResult)?;
 
-        let w_axis = Vec4::new(0.0, 0.0, 0.0, 1.0).map_err(|_| Mat4Error::InvalidResult)?;
+        let w_axis = Vec4::checked_new(0.0, 0.0, 0.0, 1.0).map_err(|_| Mat4Error::InvalidResult)?;
 
         Self::new(x_axis, y_axis, z_axis, w_axis).map_err(|_| Mat4Error::InvalidResult)
     }
@@ -249,7 +249,7 @@ impl Mat4 {
 
         let rotation = Self::from_quat(rotation)?;
 
-        let x_axis = Vec4::new(
+        let x_axis = Vec4::checked_new(
             rotation.x_axis.x * scale.x,
             rotation.x_axis.y * scale.x,
             rotation.x_axis.z * scale.x,
@@ -257,7 +257,7 @@ impl Mat4 {
         )
         .map_err(|_| Mat4Error::InvalidResult)?;
 
-        let y_axis = Vec4::new(
+        let y_axis = Vec4::checked_new(
             rotation.y_axis.x * scale.y,
             rotation.y_axis.y * scale.y,
             rotation.y_axis.z * scale.y,
@@ -265,7 +265,7 @@ impl Mat4 {
         )
         .map_err(|_| Mat4Error::InvalidResult)?;
 
-        let z_axis = Vec4::new(
+        let z_axis = Vec4::checked_new(
             rotation.z_axis.x * scale.z,
             rotation.z_axis.y * scale.z,
             rotation.z_axis.z * scale.z,
@@ -273,7 +273,7 @@ impl Mat4 {
         )
         .map_err(|_| Mat4Error::InvalidResult)?;
 
-        let w_axis = Vec4::new(translation.x, translation.y, translation.z, 1.0)
+        let w_axis = Vec4::checked_new(translation.x, translation.y, translation.z, 1.0)
             .map_err(|_| Mat4Error::InvalidResult)?;
 
         Self::new(x_axis, y_axis, z_axis, w_axis).map_err(|_| Mat4Error::InvalidResult)
@@ -287,7 +287,7 @@ impl Mat4 {
         }
 
         let result = self.mul(
-            Vec4::new(point.x, point.y, point.z, 1.0).map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::checked_new(point.x, point.y, point.z, 1.0).map_err(|_| Mat4Error::InvalidResult)?,
         )?;
 
         if result.w == 0.0 {
@@ -319,7 +319,7 @@ impl Mat4 {
         }
 
         let result = self.mul(
-            Vec4::new(vector.x, vector.y, vector.z, 0.0).map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::checked_new(vector.x, vector.y, vector.z, 0.0).map_err(|_| Mat4Error::InvalidResult)?,
         )?;
 
         Vec3::checked_new(result.x, result.y, result.z).map_err(|_| Mat4Error::InvalidResult)
@@ -335,10 +335,10 @@ impl Mat4 {
         let a = self.to_cols_array_2d();
 
         Self::new(
-            Vec4::new_unchecked(a[0][0], a[1][0], a[2][0], a[3][0]),
-            Vec4::new_unchecked(a[0][1], a[1][1], a[2][1], a[3][1]),
-            Vec4::new_unchecked(a[0][2], a[1][2], a[2][2], a[3][2]),
-            Vec4::new_unchecked(a[0][3], a[1][3], a[2][3], a[3][3]),
+            Vec4::unchecked_new(a[0][0], a[1][0], a[2][0], a[3][0]),
+            Vec4::unchecked_new(a[0][1], a[1][1], a[2][1], a[3][1]),
+            Vec4::unchecked_new(a[0][2], a[1][2], a[2][2], a[3][2]),
+            Vec4::unchecked_new(a[0][3], a[1][3], a[2][3], a[3][3]),
         )
     }
 
@@ -662,13 +662,13 @@ impl Mat4 {
             .map_err(|_| Mat4Error::InvalidResult)?;
 
         Self::new(
-            Vec4::new(side.x, up_corrected.x, -forward.x, 0.0)
+            Vec4::checked_new(side.x, up_corrected.x, -forward.x, 0.0)
                 .map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(side.y, up_corrected.y, -forward.y, 0.0)
+            Vec4::checked_new(side.y, up_corrected.y, -forward.y, 0.0)
                 .map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(side.z, up_corrected.z, -forward.z, 0.0)
+            Vec4::checked_new(side.z, up_corrected.z, -forward.z, 0.0)
                 .map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(
+            Vec4::checked_new(
                 -(side_dot as f32),
                 -(up_dot as f32),
                 forward_dot as f32,
@@ -731,7 +731,7 @@ impl Mul<Vec4> for Mat4 {
             output[i] = result[i] as f32;
         }
 
-        Vec4::new(output[0], output[1], output[2], output[3]).map_err(|_| Mat4Error::InvalidResult)
+        Vec4::checked_new(output[0], output[1], output[2], output[3]).map_err(|_| Mat4Error::InvalidResult)
     }
 }
 
