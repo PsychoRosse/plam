@@ -30,7 +30,6 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
     pub const fn checked_new(x: f32, y: f32) -> Result<Self, Vec2Error> {
         if !x.is_finite() || !y.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -40,7 +39,6 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
     pub const fn checked_splat(value: f32) -> Result<Self, Vec2Error> {
         Self::checked_new(value, value)
     }

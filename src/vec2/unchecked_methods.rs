@@ -3,7 +3,7 @@ use super::Vec2;
 impl Vec2 {
     #[inline]
     #[must_use]
-    pub fn unchecked_length_squared(self) -> f32 {
+    pub const fn unchecked_length_squared(self) -> f32 {
         self.x * self.x + self.y * self.y
     }
 

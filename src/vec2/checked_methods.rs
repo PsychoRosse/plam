@@ -4,8 +4,7 @@ use super::Vec2;
 
 impl Vec2 {
     #[inline]
-    #[must_use]
-    pub const fn checked_length_squared(self) -> Result<f32, Vec2Error> {
+    pub const fn checked_length_squared(self) -> Result<f64, Vec2Error> {
         if !self.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
         }
@@ -13,17 +12,10 @@ impl Vec2 {
         let x = self.x as f64;
         let y = self.y as f64;
 
-        let result = (x * x + y * y) as f32;
-
-        if !result.is_finite() {
-            return Err(Vec2Error::InvalidResult);
-        }
-
-        Ok(result)
+        Ok(x * x + y * y)
     }
 
     #[inline]
-    #[must_use]
     pub fn checked_length(self) -> Result<f32, Vec2Error> {
         if !self.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -49,25 +41,15 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
-    pub const fn checked_dot(self, other: Self) -> Result<f32, Vec2Error> {
-        if !self.is_finite() || !other.is_finite() {
+    pub const fn checked_dot(self, rhs: Self) -> Result<f64, Vec2Error> {
+        if !self.is_finite() || !rhs.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
         }
 
-        let result = self.x as f64 * other.x as f64 + self.y as f64 * other.y as f64;
-
-        let result = result as f32;
-
-        if !result.is_finite() {
-            return Err(Vec2Error::InvalidResult);
-        }
-
-        Ok(result)
+        Ok(self.x as f64 * rhs.x as f64 + self.y as f64 * rhs.y as f64)
     }
 
     #[inline]
-    #[must_use]
     pub fn checked_normalize(self) -> Result<Self, Vec2Error> {
         if !self.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -97,14 +79,13 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
-    pub fn checked_distance(self, other: Self) -> Result<f32, Vec2Error> {
-        if !self.is_finite() || !other.is_finite() {
+    pub fn checked_distance(self, rhs: Self) -> Result<f32, Vec2Error> {
+        if !self.is_finite() || !rhs.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
         }
 
-        let dx = self.x as f64 - other.x as f64;
-        let dy = self.y as f64 - other.y as f64;
+        let dx = self.x as f64 - rhs.x as f64;
+        let dy = self.y as f64 - rhs.y as f64;
 
         let result = (dx * dx + dy * dy).sqrt() as f32;
 
@@ -116,17 +97,16 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
-    pub const fn checked_lerp(self, other: Self, t: f32) -> Result<Self, Vec2Error> {
-        if !self.is_finite() || !other.is_finite() || !t.is_finite() {
+    pub const fn checked_lerp(self, rhs: Self, t: f32) -> Result<Self, Vec2Error> {
+        if !self.is_finite() || !rhs.is_finite() || !t.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
         }
 
         let t = t as f64;
 
-        let x = self.x as f64 + (other.x as f64 - self.x as f64) * t;
+        let x = self.x as f64 + (rhs.x as f64 - self.x as f64) * t;
 
-        let y = self.y as f64 + (other.y as f64 - self.y as f64) * t;
+        let y = self.y as f64 + (rhs.y as f64 - self.y as f64) * t;
 
         match Self::checked_new(x as f32, y as f32) {
             Ok(value) => Ok(value),
@@ -135,7 +115,6 @@ impl Vec2 {
     }
 
     #[inline]
-    #[must_use]
     pub const fn checked_perpendicular(self) -> Result<Self, Vec2Error> {
         if !self.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
