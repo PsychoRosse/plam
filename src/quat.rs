@@ -1,4 +1,4 @@
-mod core;
+mod quat;
 mod quat_error;
 
 mod checked_method_operators;
@@ -7,4 +7,4 @@ mod unchecked_method_operators;
 mod unchecked_methods;
 mod unchecked_trait_operators;
 
-pub use {core::Quat, quat_error::QuatError};
+pub use {quat::Quat, quat_error::QuatError};

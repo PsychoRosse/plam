@@ -4,6 +4,70 @@ use super::Quat;
 
 impl Quat {
     #[inline]
+    pub const fn checked_from_array(values: [f32; 4]) -> Result<Self, QuatError> {
+        Self::checked_new(values[0], values[1], values[2], values[3])
+    }
+
+    #[inline]
+    pub const fn checked_splat(value: f32) -> Result<Self, QuatError> {
+        Self::checked_new(value, value, value, value)
+    }
+
+    #[inline]
+    pub const fn checked_new(x: f32, y: f32, z: f32, w: f32) -> Result<Self, QuatError> {
+        if !x.is_finite() || !y.is_finite() || !z.is_finite() || !w.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        Ok(Self::unchecked_new(x, y, z, w))
+    }
+
+    #[inline]
+    pub fn checked_from_euler(
+        x_degrees: f32,
+        y_degrees: f32,
+        z_degrees: f32,
+    ) -> Result<Self, QuatError> {
+        if !x_degrees.is_finite() || !y_degrees.is_finite() || !z_degrees.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        Ok(Self::unchecked_from_euler(x_degrees, y_degrees, z_degrees))
+    }
+
+    #[inline]
+    pub fn checked_from_axis_angle(axis: Vec3, degrees: f32) -> Result<Self, QuatError> {
+        if !axis.is_finite() || !degrees.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        let scale = axis.x.abs().max(axis.y.abs()).max(axis.z.abs());
+
+        if scale == 0.0 {
+            return Err(QuatError::InvalidAxis);
+        }
+
+        Ok(Self::unchecked_from_axis_angle(axis, degrees))
+    }
+
+    #[inline]
+    pub fn checked_from_scaled_axis(scaled_axis: Vec3) -> Result<Self, QuatError> {
+        if !scaled_axis.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        Ok(Self::unchecked_from_scaled_axis(scaled_axis))
+    }
+
+    #[inline]
+    pub const fn checked_xyz(self) -> Result<Vec3, QuatError> {
+        match Vec3::checked_new(self.x, self.y, self.z) {
+            Ok(value) => Ok(value),
+            Err(_) => Err(QuatError::InvalidResult),
+        }
+    }
+
+    #[inline]
     pub const fn checked_dot(self, rhs: Self) -> Result<f64, QuatError> {
         if !self.is_finite() || !rhs.is_finite() {
             return Err(QuatError::NonFiniteInput);
@@ -174,8 +238,7 @@ impl Quat {
         }
 
         if sin_half == 0.0 {
-            let axis = Vec3::checked_new(1.0, 0.0, 0.0)
-                .map_err(|_| QuatError::InvalidResult)?;
+            let axis = Vec3::checked_new(1.0, 0.0, 0.0).map_err(|_| QuatError::InvalidResult)?;
             return Ok((axis, 0.0));
         }
 

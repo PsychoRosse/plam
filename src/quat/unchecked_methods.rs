@@ -5,6 +5,105 @@ use super::Quat;
 impl Quat {
     #[inline]
     #[must_use]
+    pub const fn unchecked_from_array(values: [f32; 4]) -> Self {
+        Self::unchecked_new(values[0], values[1], values[2], values[3])
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_splat(value: f32) -> Self {
+        Self::unchecked_new(value, value, value, value)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_from_euler(x_degrees: f32, y_degrees: f32, z_degrees: f32) -> Self {
+        let x = x_degrees.rem_euclid(360.0).to_radians();
+        let y = y_degrees.rem_euclid(360.0).to_radians();
+        let z = z_degrees.rem_euclid(360.0).to_radians();
+
+        let (sin_x, cos_x) = (x * 0.5).sin_cos();
+        let (sin_y, cos_y) = (y * 0.5).sin_cos();
+        let (sin_z, cos_z) = (z * 0.5).sin_cos();
+
+        Self::unchecked_new(
+            sin_x * cos_y * cos_z + cos_x * sin_y * sin_z,
+            cos_x * sin_y * cos_z - sin_x * cos_y * sin_z,
+            cos_x * cos_y * sin_z + sin_x * sin_y * cos_z,
+            cos_x * cos_y * cos_z - sin_x * sin_y * sin_z,
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_from_axis_angle(axis: Vec3, degrees: f32) -> Self {
+        let scale = axis.x.abs().max(axis.y.abs()).max(axis.z.abs());
+
+        let x = axis.x / scale;
+        let y = axis.y / scale;
+        let z = axis.z / scale;
+        let length = (x * x + y * y + z * z).sqrt();
+
+        let half_angle = degrees.rem_euclid(360.0).to_radians() * 0.5;
+        let (sin, cos) = half_angle.sin_cos();
+
+        Self::unchecked_new(
+            (x / length) * sin,
+            (y / length) * sin,
+            (z / length) * sin,
+            cos,
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_from_scaled_axis(scaled_axis: Vec3) -> Self {
+        let scale = scaled_axis
+            .x
+            .abs()
+            .max(scaled_axis.y.abs())
+            .max(scaled_axis.z.abs());
+
+        if scale == 0.0 {
+            return Self::IDENTITY;
+        }
+
+        let x = scaled_axis.x / scale;
+        let y = scaled_axis.y / scale;
+        let z = scaled_axis.z / scale;
+
+        let scaled_length = (x * x + y * y + z * z).sqrt();
+
+        let angle = (scale as f64) * (scaled_length as f64);
+        let half_angle = angle.rem_euclid(360.0).to_radians() * 0.5;
+
+        let (sin, cos) = half_angle.sin_cos();
+
+        let sin = sin as f32;
+        let cos = cos as f32;
+
+        Self::unchecked_new(
+            (x / scaled_length) * sin,
+            (y / scaled_length) * sin,
+            (z / scaled_length) * sin,
+            cos,
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_new(x: f32, y: f32, z: f32, w: f32) -> Self {
+        Self { x, y, z, w }
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_xyz(self) -> Vec3 {
+        Vec3::unchecked_new(self.x, self.y, self.z)
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn unchecked_dot(self, rhs: Self) -> f32 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
     }

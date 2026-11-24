@@ -4,6 +4,20 @@ use super::Vec3;
 
 impl Vec3 {
     #[inline]
+    pub const fn checked_new(x: f32, y: f32, z: f32) -> Result<Self, Vec3Error> {
+        if !x.is_finite() || !y.is_finite() || !z.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
+
+        Ok(Self::unchecked_new(x, y, z))
+    }
+
+    #[inline]
+    pub const fn checked_splat(value: f32) -> Result<Self, Vec3Error> {
+        Self::checked_new(value, value, value)
+    }
+
+    #[inline]
     pub const fn checked_length_squared(self) -> Result<f64, Vec3Error> {
         if !self.is_finite() {
             return Err(Vec3Error::NonFiniteInput);

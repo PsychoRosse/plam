@@ -1,8 +1,27 @@
-use crate::Vec4Error;
+use crate::{Vec3, Vec3Error, Vec4Error};
 
 use super::Vec4;
 
 impl Vec4 {
+    #[inline]
+    pub const fn checked_new(x: f32, y: f32, z: f32, w: f32) -> Result<Self, Vec4Error> {
+        if !x.is_finite() || !y.is_finite() || !z.is_finite() || !w.is_finite() {
+            return Err(Vec4Error::NonFiniteInput);
+        }
+
+        Ok(Self::unchecked_new(x, y, z, w))
+    }
+
+    #[inline]
+    pub const fn checked_splat(value: f32) -> Result<Self, Vec4Error> {
+        Self::checked_new(value, value, value, value)
+    }
+
+    #[inline]
+    pub const fn checked_xyz(self) -> Result<Vec3, Vec3Error> {
+        Vec3::checked_new(self.x, self.y, self.z)
+    }
+
     #[inline]
     pub const fn checked_length_squared(self) -> Result<f64, Vec4Error> {
         if !self.is_finite() {

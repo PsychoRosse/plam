@@ -4,6 +4,20 @@ use super::Vec2;
 
 impl Vec2 {
     #[inline]
+    pub const fn checked_new(x: f32, y: f32) -> Result<Self, Vec2Error> {
+        if !x.is_finite() || !y.is_finite() {
+            return Err(Vec2Error::NonFiniteInput);
+        }
+
+        Ok(Self::unchecked_new(x, y))
+    }
+
+    #[inline]
+    pub const fn checked_splat(value: f32) -> Result<Self, Vec2Error> {
+        Self::checked_new(value, value)
+    }
+
+    #[inline]
     pub const fn checked_length_squared(self) -> Result<f64, Vec2Error> {
         if !self.is_finite() {
             return Err(Vec2Error::NonFiniteInput);

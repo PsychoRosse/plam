@@ -1,5 +1,3 @@
-use crate::Vec3Error;
-
 #[cfg(feature = "serde")]
 use serde::{
     Deserialize, Serialize, Serializer,
@@ -26,32 +24,6 @@ impl Vec3 {
 }
 
 impl Vec3 {
-    #[inline]
-    #[must_use]
-    pub const fn unchecked_new(x: f32, y: f32, z: f32) -> Self {
-        Self { x, y, z }
-    }
-
-    #[inline]
-    pub const fn checked_new(x: f32, y: f32, z: f32) -> Result<Self, Vec3Error> {
-        if !x.is_finite() || !y.is_finite() || !z.is_finite() {
-            return Err(Vec3Error::NonFiniteInput);
-        }
-
-        Ok(Self::unchecked_new(x, y, z))
-    }
-
-    #[inline]
-    pub const fn checked_splat(value: f32) -> Result<Self, Vec3Error> {
-        Self::checked_new(value, value, value)
-    }
-
-    #[inline]
-    #[must_use]
-    pub const fn unchecked_splat(value: f32) -> Self {
-        Self::unchecked_new(value, value, value)
-    }
-
     #[inline]
     #[must_use]
     pub const fn is_finite(self) -> bool {

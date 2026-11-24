@@ -1,5 +1,3 @@
-use crate::Vec2Error;
-
 #[cfg(feature = "serde")]
 use serde::{
     Deserialize, Serialize, Serializer,
@@ -23,32 +21,6 @@ impl Vec2 {
 }
 
 impl Vec2 {
-    #[inline]
-    #[must_use]
-    pub const fn unchecked_new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
-
-    #[inline]
-    pub const fn checked_new(x: f32, y: f32) -> Result<Self, Vec2Error> {
-        if !x.is_finite() || !y.is_finite() {
-            return Err(Vec2Error::NonFiniteInput);
-        }
-
-        Ok(Self::unchecked_new(x, y))
-    }
-
-    #[inline]
-    pub const fn checked_splat(value: f32) -> Result<Self, Vec2Error> {
-        Self::checked_new(value, value)
-    }
-
-    #[inline]
-    #[must_use]
-    pub const fn unchecked_splat(value: f32) -> Self {
-        Self::unchecked_new(value, value)
-    }
-
     #[inline]
     #[must_use]
     pub const fn is_finite(self) -> bool {

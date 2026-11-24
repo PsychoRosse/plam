@@ -1,6 +1,26 @@
+use crate::Vec3;
+
 use super::Vec4;
 
 impl Vec4 {
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_new(x: f32, y: f32, z: f32, w: f32) -> Self {
+        Self { x, y, z, w }
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_splat(value: f32) -> Self {
+        Self::unchecked_new(value, value, value, value)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_xyz(self) -> Vec3 {
+        Vec3::unchecked_new(self.x, self.y, self.z)
+    }
+
     #[inline]
     #[must_use]
     pub const fn unchecked_length_squared(self) -> f32 {

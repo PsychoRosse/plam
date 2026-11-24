@@ -3,6 +3,18 @@ use super::Vec2;
 impl Vec2 {
     #[inline]
     #[must_use]
+    pub const fn unchecked_new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_splat(value: f32) -> Self {
+        Self::unchecked_new(value, value)
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn unchecked_length_squared(self) -> f32 {
         self.x * self.x + self.y * self.y
     }

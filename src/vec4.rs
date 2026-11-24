@@ -1,4 +1,4 @@
-mod core;
+mod vec4;
 mod vec4_error;
 
 mod checked_method_operators;
@@ -7,4 +7,4 @@ mod unchecked_method_operators;
 mod unchecked_methods;
 mod unchecked_trait_operators;
 
-pub use {core::Vec4, vec4_error::Vec4Error};
+pub use {vec4::Vec4, vec4_error::Vec4Error};
