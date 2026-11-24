@@ -1,6 +1,6 @@
 use crate::{MouseDeltaError, MousePosition};
 
-use std::ops::Mul;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[cfg(feature = "clama")]
 use clama::Event;
@@ -21,10 +21,9 @@ impl MouseDelta {
 
 impl MouseDelta {
     #[inline]
-    #[must_use]
     pub const fn new(x: f32, y: f32) -> Result<Self, MouseDeltaError> {
         if !x.is_finite() || !y.is_finite() {
-            return Err(MouseDeltaError::NonFinite);
+            return Err(MouseDeltaError::NonFiniteInput);
         }
 
         if x.abs() > Self::MAX_COMPONENT || y.abs() > Self::MAX_COMPONENT {
@@ -38,68 +37,67 @@ impl MouseDelta {
 impl MouseDelta {
     #[inline]
     #[must_use]
-    pub const fn x(&self) -> f32 {
+    pub const fn x(self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
-    pub const fn y(&self) -> f32 {
+    pub const fn y(self) -> f32 {
         self.y
     }
 
     #[inline]
     #[must_use]
-    pub const fn is_finite(&self) -> bool {
+    pub const fn is_finite(self) -> bool {
         self.x.is_finite() && self.y.is_finite()
     }
 
     #[inline]
     #[must_use]
-    pub const fn is_zero(&self) -> bool {
+    pub const fn is_zero(self) -> bool {
         self.x == 0.0 && self.y == 0.0
     }
 
     #[inline]
-    #[must_use]
     pub const fn checked_add(self, rhs: Self) -> Result<Self, MouseDeltaError> {
         Self::new(self.x + rhs.x, self.y + rhs.y)
     }
 
     #[inline]
-    #[must_use]
     pub fn checked_add_assign(&mut self, rhs: Self) -> Result<(), MouseDeltaError> {
         *self = self.checked_add(rhs)?;
         Ok(())
     }
 
     #[inline]
-    #[must_use]
     pub const fn checked_sub(self, rhs: Self) -> Result<Self, MouseDeltaError> {
         Self::new(self.x - rhs.x, self.y - rhs.y)
     }
 
     #[inline]
-    #[must_use]
     pub fn checked_sub_assign(&mut self, rhs: Self) -> Result<(), MouseDeltaError> {
         *self = self.checked_sub(rhs)?;
         Ok(())
     }
 
     #[inline]
-    #[must_use]
     pub fn scaled(self, multiplier: f32) -> Result<Self, MouseDeltaError> {
         if !multiplier.is_finite() {
-            return Err(MouseDeltaError::NonFinite);
+            return Err(MouseDeltaError::NonFiniteInput);
         }
 
         Self::new(self.x * multiplier, self.y * multiplier)
     }
 
     #[inline]
-    #[must_use]
     pub const fn from_array(values: [f32; 2]) -> Result<Self, MouseDeltaError> {
         Self::new(values[0], values[1])
+    }
+
+    #[inline]
+    pub const fn splat(value: f32) -> Result<Self, MouseDeltaError> {
+        Self::new(value, value)
     }
 
     #[inline]
@@ -112,6 +110,12 @@ impl MouseDelta {
     #[must_use]
     pub fn length(self) -> f32 {
         self.x.hypot(self.y)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn max_component(self) -> f32 {
+        self.x.abs().max(self.y.abs())
     }
 
     #[inline]
@@ -140,6 +144,50 @@ impl Mul<MouseDelta> for f32 {
     #[inline]
     fn mul(self, rhs: MouseDelta) -> Self::Output {
         rhs * self
+    }
+}
+
+impl Add for MouseDelta {
+    type Output = Result<Self, MouseDeltaError>;
+
+    #[inline]
+    fn add(self, rhs: Self) -> Self::Output {
+        self.checked_add(rhs)
+    }
+}
+
+impl Sub for MouseDelta {
+    type Output = Result<Self, MouseDeltaError>;
+
+    #[inline]
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.checked_sub(rhs)
+    }
+}
+
+impl Div<f32> for MouseDelta {
+    type Output = Result<Self, MouseDeltaError>;
+
+    #[inline]
+    fn div(self, scalar: f32) -> Self::Output {
+        if !scalar.is_finite() {
+            return Err(MouseDeltaError::NonFiniteInput);
+        }
+
+        if scalar == 0.0 {
+            return Err(MouseDeltaError::DivisionByZero);
+        }
+
+        Self::new(self.x / scalar, self.y / scalar)
+    }
+}
+
+impl Neg for MouseDelta {
+    type Output = Result<Self, MouseDeltaError>;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        Self::new(-self.x, -self.y)
     }
 }
 

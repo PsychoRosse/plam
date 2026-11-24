@@ -7,7 +7,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Error, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MouseDeltaError {
     #[error("Mouse delta components must be finite")]
-    NonFinite,
+    NonFiniteInput,
     #[error("Mouse delta components exceed the permitted range")]
     OutOfRange,
+    #[error("Division by zero")]
+    DivisionByZero,
 }

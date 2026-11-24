@@ -21,10 +21,9 @@ impl MouseScrollDelta {
 
 impl MouseScrollDelta {
     #[inline]
-    #[must_use]
     pub const fn new(x: f32, y: f32) -> Result<Self, MouseScrollDeltaError> {
         if !x.is_finite() || !y.is_finite() {
-            return Err(MouseScrollDeltaError::NonFinite);
+            return Err(MouseScrollDeltaError::NonFiniteInput);
         }
 
         if x.abs() > Self::MAX_COMPONENT || y.abs() > Self::MAX_COMPONENT {
@@ -33,26 +32,23 @@ impl MouseScrollDelta {
 
         Ok(Self { x, y })
     }
-}
 
-impl MouseScrollDelta {
     #[inline]
     #[must_use]
-    pub const fn x(&self) -> f32 {
+    pub const fn x(self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
-    pub const fn y(&self) -> f32 {
+    pub const fn y(self) -> f32 {
         self.y
     }
 
     #[inline]
-    #[must_use]
     pub fn scaled(self, multiplier: f32) -> Result<Self, MouseScrollDeltaError> {
         if !multiplier.is_finite() {
-            return Err(MouseScrollDeltaError::NonFinite);
+            return Err(MouseScrollDeltaError::NonFiniteInput);
         }
 
         Self::new(self.x * multiplier, self.y * multiplier)
@@ -60,18 +56,17 @@ impl MouseScrollDelta {
 
     #[inline]
     #[must_use]
-    pub const fn is_finite(&self) -> bool {
+    pub const fn is_finite(self) -> bool {
         self.x.is_finite() && self.y.is_finite()
     }
 
     #[inline]
     #[must_use]
-    pub const fn is_zero(&self) -> bool {
+    pub const fn is_zero(self) -> bool {
         self.x == 0.0 && self.y == 0.0
     }
 
     #[inline]
-    #[must_use]
     pub const fn from_array(values: [f32; 2]) -> Result<Self, MouseScrollDeltaError> {
         Self::new(values[0], values[1])
     }
@@ -83,7 +78,6 @@ impl MouseScrollDelta {
     }
 
     #[inline]
-    #[must_use]
     pub const fn splat(value: f32) -> Result<Self, MouseScrollDeltaError> {
         Self::new(value, value)
     }
@@ -101,7 +95,28 @@ impl MouseScrollDelta {
     }
 
     #[inline]
-    #[must_use]
+    pub const fn checked_add(self, rhs: Self) -> Result<Self, MouseScrollDeltaError> {
+        Self::new(self.x + rhs.x, self.y + rhs.y)
+    }
+
+    #[inline]
+    pub fn checked_add_assign(&mut self, rhs: Self) -> Result<(), MouseScrollDeltaError> {
+        *self = self.checked_add(rhs)?;
+        Ok(())
+    }
+
+    #[inline]
+    pub const fn checked_sub(self, rhs: Self) -> Result<Self, MouseScrollDeltaError> {
+        Self::new(self.x - rhs.x, self.y - rhs.y)
+    }
+
+    #[inline]
+    pub fn checked_sub_assign(&mut self, rhs: Self) -> Result<(), MouseScrollDeltaError> {
+        *self = self.checked_sub(rhs)?;
+        Ok(())
+    }
+
+    #[inline]
     pub fn is_approx_eq(self, rhs: Self, epsilon: f32) -> bool {
         if !self.is_finite() || !rhs.is_finite() || !epsilon.is_finite() || epsilon < 0.0 {
             return false;
@@ -116,7 +131,7 @@ impl Add for MouseScrollDelta {
 
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
-        Self::new(self.x + rhs.x, self.y + rhs.y)
+        self.checked_add(rhs)
     }
 }
 
@@ -125,7 +140,7 @@ impl Sub for MouseScrollDelta {
 
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
-        Self::new(self.x - rhs.x, self.y - rhs.y)
+        self.checked_sub(rhs)
     }
 }
 
@@ -134,11 +149,7 @@ impl Mul<f32> for MouseScrollDelta {
 
     #[inline]
     fn mul(self, scalar: f32) -> Self::Output {
-        if !scalar.is_finite() {
-            return Err(MouseScrollDeltaError::NonFinite);
-        }
-
-        Self::new(self.x * scalar, self.y * scalar)
+        self.scaled(scalar)
     }
 }
 
@@ -157,7 +168,7 @@ impl Div<f32> for MouseScrollDelta {
     #[inline]
     fn div(self, scalar: f32) -> Self::Output {
         if !scalar.is_finite() {
-            return Err(MouseScrollDeltaError::NonFinite);
+            return Err(MouseScrollDeltaError::NonFiniteInput);
         }
 
         if scalar == 0.0 {

@@ -5,24 +5,24 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStru
 
 #[cfg_attr(feature = "clama", derive(Event))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct SurfaceSize {
+pub struct Extent {
     pub(crate) width: std::num::NonZero<u32>,
     pub(crate) height: std::num::NonZero<u32>,
 }
 
-impl SurfaceSize {
+impl Extent {
     pub const MAX_DIMENSION: u32 = 16_384;
     pub const MAX_AREA: u64 = 67_108_864;
 }
 
-impl Default for SurfaceSize {
+impl Default for Extent {
     #[inline]
     fn default() -> Self {
         Self::hd()
     }
 }
 
-impl SurfaceSize {
+impl Extent {
     #[inline]
     #[must_use]
     pub fn clamped(width: u32, height: u32) -> Self {
@@ -60,6 +60,12 @@ impl SurfaceSize {
 
     #[inline]
     #[must_use]
+    pub fn minimum() -> Self {
+        Self::clamped(1, 1)
+    }
+
+    #[inline]
+    #[must_use]
     pub fn hd() -> Self {
         Self::clamped(1280, 720)
     }
@@ -84,16 +90,20 @@ impl SurfaceSize {
 
     #[inline]
     #[must_use]
-    pub fn minimum() -> Self {
-        Self::clamped(1, 1)
-    }
-
-    #[inline]
-    #[must_use]
     pub const fn is_valid(self) -> bool {
         self.width.get() <= Self::MAX_DIMENSION
             && self.height.get() <= Self::MAX_DIMENSION
             && self.area() <= Self::MAX_AREA
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn is_valid_size(width: u32, height: u32) -> bool {
+        width > 0
+            && height > 0
+            && width <= Self::MAX_DIMENSION
+            && height <= Self::MAX_DIMENSION
+            && width as u64 * height as u64 <= Self::MAX_AREA
     }
 
     #[inline]
@@ -177,60 +187,60 @@ impl SurfaceSize {
     }
 }
 
-impl From<[u32; 2]> for SurfaceSize {
+impl From<[u32; 2]> for Extent {
     #[inline]
     fn from([width, height]: [u32; 2]) -> Self {
         Self::clamped(width, height)
     }
 }
 
-impl From<SurfaceSize> for [u32; 2] {
+impl From<Extent> for [u32; 2] {
     #[inline]
-    fn from(size: SurfaceSize) -> Self {
+    fn from(size: Extent) -> Self {
         [size.width(), size.height()]
     }
 }
 
-impl From<(u32, u32)> for SurfaceSize {
+impl From<(u32, u32)> for Extent {
     #[inline]
     fn from((width, height): (u32, u32)) -> Self {
         Self::clamped(width, height)
     }
 }
 
-impl From<SurfaceSize> for (u32, u32) {
+impl From<Extent> for (u32, u32) {
     #[inline]
-    fn from(size: SurfaceSize) -> Self {
+    fn from(size: Extent) -> Self {
         (size.width(), size.height())
     }
 }
 
 #[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for SurfaceSize {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        struct RawSurfaceSize {
-            width: u32,
-            height: u32,
-        }
-
-        let raw = RawSurfaceSize::deserialize(deserializer)?;
-
-        Ok(Self::clamped(raw.width, raw.height))
-    }
-}
-
-#[cfg(feature = "serde")]
-impl Serialize for SurfaceSize {
+impl Serialize for Extent {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut state = serializer.serialize_struct("SurfaceSize", 2)?;
+        let mut state = serializer.serialize_struct("Extent", 2)?;
 
         state.serialize_field("width", &self.width())?;
         state.serialize_field("height", &self.height())?;
 
         state.end()
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Extent {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct RawExtent {
+            width: u32,
+            height: u32,
+        }
+
+        let raw = RawExtent::deserialize(deserializer)?;
+
+        Ok(Self::clamped(raw.width, raw.height))
     }
 }

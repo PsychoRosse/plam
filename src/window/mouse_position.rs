@@ -1,4 +1,4 @@
-use crate::{MouseDelta, MouseDeltaError};
+use crate::{MouseDelta, MouseDeltaError, MousePositionError};
 
 #[cfg(feature = "clama")]
 use clama::Event;
@@ -18,14 +18,13 @@ impl MousePosition {
 
 impl MousePosition {
     #[inline]
-    #[must_use]
-    pub const fn new(x: f32, y: f32) -> Result<Self, MouseDeltaError> {
+    pub const fn new(x: f32, y: f32) -> Result<Self, MousePositionError> {
         if !x.is_finite() || !y.is_finite() {
-            return Err(MouseDeltaError::NonFinite);
+            return Err(MousePositionError::NonFiniteInput);
         }
 
         if x.abs() > Self::MAX_COMPONENT || y.abs() > Self::MAX_COMPONENT {
-            return Err(MouseDeltaError::OutOfRange);
+            return Err(MousePositionError::OutOfRange);
         }
 
         Ok(Self { x, y })
@@ -33,31 +32,28 @@ impl MousePosition {
 
     #[inline]
     #[must_use]
-    pub const fn x(&self) -> f32 {
+    pub const fn x(self) -> f32 {
         self.x
     }
 
     #[inline]
     #[must_use]
-    pub const fn y(&self) -> f32 {
+    pub const fn y(self) -> f32 {
         self.y
     }
 
     #[inline]
-    #[must_use]
     pub const fn checked_sub(self, rhs: Self) -> Result<MouseDelta, MouseDeltaError> {
         MouseDelta::new(self.x - rhs.x, self.y - rhs.y)
     }
 
     #[inline]
-    #[must_use]
-    pub const fn checked_add(self, rhs: MouseDelta) -> Result<Self, MouseDeltaError> {
+    pub const fn checked_add(self, rhs: MouseDelta) -> Result<Self, MousePositionError> {
         Self::new(self.x + rhs.x, self.y + rhs.y)
     }
 
     #[inline]
-    #[must_use]
-    pub const fn from_array(values: [f32; 2]) -> Result<Self, MouseDeltaError> {
+    pub const fn from_array(values: [f32; 2]) -> Result<Self, MousePositionError> {
         Self::new(values[0], values[1])
     }
 
@@ -69,13 +65,13 @@ impl MousePosition {
 
     #[inline]
     #[must_use]
-    pub const fn is_finite(&self) -> bool {
+    pub const fn is_finite(self) -> bool {
         self.x.is_finite() && self.y.is_finite()
     }
 
     #[inline]
     #[must_use]
-    pub const fn is_zero(&self) -> bool {
+    pub const fn is_zero(self) -> bool {
         self.x == 0.0 && self.y == 0.0
     }
 
@@ -87,9 +83,24 @@ impl MousePosition {
 
     #[inline]
     #[must_use]
-    pub fn lerp(self, end: Self, t: f32) -> Result<Self, MouseDeltaError> {
+    pub fn length(self) -> f32 {
+        self.x.hypot(self.y)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn is_approx_eq(self, rhs: Self, epsilon: f32) -> bool {
+        if !self.is_finite() || !rhs.is_finite() || !epsilon.is_finite() || epsilon < 0.0 {
+            return false;
+        }
+
+        (self.x - rhs.x).abs() <= epsilon && (self.y - rhs.y).abs() <= epsilon
+    }
+
+    #[inline]
+    pub fn lerp(self, end: Self, t: f32) -> Result<Self, MousePositionError> {
         if !t.is_finite() {
-            return Err(MouseDeltaError::NonFinite);
+            return Err(MousePositionError::NonFiniteInput);
         }
 
         Self::new(self.x + (end.x - self.x) * t, self.y + (end.y - self.y) * t)
