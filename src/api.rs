@@ -3,12 +3,10 @@ mod mouse_delta;
 mod mouse_position;
 mod mouse_scroll;
 mod mouse_scroll_delta;
-mod quat;
 mod surface_size;
 mod window_size;
 
 pub use {
     mat4::Mat4, mouse_delta::MouseDelta, mouse_position::MousePosition, mouse_scroll::MouseScroll,
-    mouse_scroll_delta::MouseScrollDelta, quat::Quat, surface_size::SurfaceSize,
-    window_size::WindowSize,
+    mouse_scroll_delta::MouseScrollDelta, surface_size::SurfaceSize, window_size::WindowSize,
 };

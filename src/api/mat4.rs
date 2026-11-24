@@ -201,7 +201,7 @@ impl Mat4 {
     #[must_use]
     pub fn from_quat(rotation: Quat) -> Result<Self, Mat4Error> {
         let q = rotation
-            .normalize()
+            .checked_normalize()
             .map_err(|_| Mat4Error::InvalidQuaternion)?;
 
         let [x, y, z, w] = q.to_array();
