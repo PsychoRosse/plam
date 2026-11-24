@@ -268,7 +268,7 @@ impl Vec4 {
     #[inline]
     #[must_use]
     pub const fn xyz(self) -> Result<Vec3, Vec3Error> {
-        Vec3::new(self.x, self.y, self.z)
+        Vec3::checked_new(self.x, self.y, self.z)
     }
 
     #[inline]

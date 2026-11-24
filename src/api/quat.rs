@@ -99,7 +99,7 @@ impl Quat {
     #[inline]
     #[must_use]
     pub const fn xyz(self) -> Result<Vec3, QuatError> {
-        match Vec3::new(self.x, self.y, self.z) {
+        match Vec3::checked_new(self.x, self.y, self.z) {
             Ok(value) => Ok(value),
             Err(_) => Err(QuatError::InvalidResult),
         }
@@ -431,7 +431,7 @@ impl Quat {
             return Err(QuatError::InvalidResult);
         }
 
-        Vec3::new(rx as f32, ry as f32, rz as f32).map_err(|_| QuatError::InvalidResult)
+        Vec3::checked_new(rx as f32, ry as f32, rz as f32).map_err(|_| QuatError::InvalidResult)
     }
 
     #[inline]
@@ -450,11 +450,11 @@ impl Quat {
         }
 
         if sin_half == 0.0 {
-            let axis = Vec3::new(1.0, 0.0, 0.0).map_err(|_| QuatError::InvalidResult)?;
+            let axis = Vec3::checked_new(1.0, 0.0, 0.0).map_err(|_| QuatError::InvalidResult)?;
             return Ok((axis, 0.0));
         }
 
-        let axis = Vec3::new(q.x / sin_half, q.y / sin_half, q.z / sin_half)
+        let axis = Vec3::checked_new(q.x / sin_half, q.y / sin_half, q.z / sin_half)
             .map_err(|_| QuatError::InvalidResult)?;
 
         let angle = 2.0 * sin_half.atan2(q.w).to_degrees();

@@ -308,7 +308,7 @@ impl Mat4 {
             return Err(Mat4Error::InvalidResult);
         }
 
-        Vec3::new(x as f32, y as f32, z as f32).map_err(|_| Mat4Error::InvalidResult)
+        Vec3::checked_new(x as f32, y as f32, z as f32).map_err(|_| Mat4Error::InvalidResult)
     }
 
     #[inline]
@@ -322,7 +322,7 @@ impl Mat4 {
             Vec4::new(vector.x, vector.y, vector.z, 0.0).map_err(|_| Mat4Error::InvalidResult)?,
         )?;
 
-        Vec3::new(result.x, result.y, result.z).map_err(|_| Mat4Error::InvalidResult)
+        Vec3::checked_new(result.x, result.y, result.z).map_err(|_| Mat4Error::InvalidResult)
     }
 
     #[inline]
@@ -624,30 +624,42 @@ impl Mat4 {
             return Err(Mat4Error::NonFiniteInput);
         }
 
-        let forward = (center - eye).map_err(|_| Mat4Error::InvalidResult)?;
-        let forward_length = forward.length().map_err(|_| Mat4Error::InvalidResult)?;
+        let forward = center.checked_sub(eye).map_err(|_| Mat4Error::InvalidResult)?;
+        let forward_length = forward
+            .checked_length()
+            .map_err(|_| Mat4Error::InvalidResult)?;
 
         if forward_length == 0.0 {
             return Err(Mat4Error::InvalidLookAtParameters);
         }
 
-        let forward = (forward / forward_length).map_err(|_| Mat4Error::InvalidResult)?;
+        let forward = forward
+            .checked_div_scalar(forward_length)
+            .map_err(|_| Mat4Error::InvalidResult)?;
 
-        let side = forward.cross(up).map_err(|_| Mat4Error::InvalidResult)?;
-        let side_length = side.length().map_err(|_| Mat4Error::InvalidResult)?;
+        let side = forward
+            .checked_cross(up)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+        let side_length = side.checked_length().map_err(|_| Mat4Error::InvalidResult)?;
 
         if side_length == 0.0 {
             return Err(Mat4Error::InvalidLookAtParameters);
         }
 
-        let side = (side / side_length).map_err(|_| Mat4Error::InvalidResult)?;
-        let up_corrected = side.cross(forward).map_err(|_| Mat4Error::InvalidResult)?;
-
-        let side_dot = side.dot(eye).map_err(|_| Mat4Error::InvalidResult)?;
-        let up_dot = up_corrected
-            .dot(eye)
+        let side = side
+            .checked_div_scalar(side_length)
             .map_err(|_| Mat4Error::InvalidResult)?;
-        let forward_dot = forward.dot(eye).map_err(|_| Mat4Error::InvalidResult)?;
+        let up_corrected = side
+            .checked_cross(forward)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+
+        let side_dot = side.checked_dot(eye).map_err(|_| Mat4Error::InvalidResult)?;
+        let up_dot = up_corrected
+            .checked_dot(eye)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+        let forward_dot = forward
+            .checked_dot(eye)
+            .map_err(|_| Mat4Error::InvalidResult)?;
 
         Self::new(
             Vec4::new(side.x, up_corrected.x, -forward.x, 0.0)
@@ -656,8 +668,13 @@ impl Mat4 {
                 .map_err(|_| Mat4Error::InvalidResult)?,
             Vec4::new(side.z, up_corrected.z, -forward.z, 0.0)
                 .map_err(|_| Mat4Error::InvalidResult)?,
-            Vec4::new(-side_dot, -up_dot, forward_dot, 1.0)
-                .map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::new(
+                -(side_dot as f32),
+                -(up_dot as f32),
+                forward_dot as f32,
+                1.0,
+            )
+            .map_err(|_| Mat4Error::InvalidResult)?,
         )
     }
 
