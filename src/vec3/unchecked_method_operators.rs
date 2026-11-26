@@ -14,9 +14,19 @@ impl Vec3 {
     }
 
     #[inline]
+    pub fn unchecked_add_assign(&mut self, rhs: Self) {
+        *self = Self::unchecked_new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+
+    #[inline]
     #[must_use]
     pub const fn unchecked_sub(self, rhs: Self) -> Self {
         Self::unchecked_new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+
+    #[inline]
+    pub fn unchecked_sub_assign(&mut self, rhs: Self) {
+        *self = Self::unchecked_new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
     }
 
     #[inline]
@@ -26,7 +36,6 @@ impl Vec3 {
     }
 
     #[inline]
-    #[must_use]
     pub fn unchecked_mul_assign(&mut self, rhs: Self) {
         *self = Self::unchecked_new(self.x * rhs.x, self.y * rhs.y, self.z * rhs.z)
     }
