@@ -2,7 +2,7 @@ use crate::Vec3;
 
 use super::Quat;
 
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, MulAssign, Neg, Sub};
 
 impl Neg for Quat {
     type Output = Self;
@@ -37,6 +37,13 @@ impl Mul for Quat {
     #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         self.unchecked_mul(rhs)
+    }
+}
+
+impl MulAssign for Quat {
+    #[inline]
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_mul(rhs);
     }
 }
 

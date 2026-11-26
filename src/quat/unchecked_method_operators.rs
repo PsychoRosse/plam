@@ -44,6 +44,12 @@ impl Quat {
 
     #[inline]
     #[must_use]
+    pub fn unchecked_mul_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_mul(rhs);
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn unchecked_mul_vec3(self, rhs: Vec3) -> Vec3 {
         Vec3::unchecked_new(
             self.x * rhs.x + self.y * rhs.y + self.z * rhs.z,
