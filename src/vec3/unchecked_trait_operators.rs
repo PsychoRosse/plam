@@ -1,6 +1,6 @@
 use super::Vec3;
 
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 
 impl Neg for Vec3 {
     type Output = Self;
@@ -38,12 +38,26 @@ impl Mul for Vec3 {
     }
 }
 
+impl MulAssign for Vec3 {
+    #[inline]
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_mul(rhs)
+    }
+}
+
 impl Div for Vec3 {
     type Output = Self;
 
     #[inline]
     fn div(self, rhs: Self) -> Self::Output {
         self.unchecked_div(rhs)
+    }
+}
+
+impl DivAssign for Vec3 {
+    #[inline]
+    fn div_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_div(rhs)
     }
 }
 
