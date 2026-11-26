@@ -1,3 +1,5 @@
+use crate::Vec3;
+
 use super::Quat;
 
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -44,6 +46,15 @@ impl Mul<f32> for Quat {
     #[inline]
     fn mul(self, rhs: f32) -> Self::Output {
         self.unchecked_mul_scalar(rhs)
+    }
+}
+
+impl Mul<Vec3> for Quat {
+    type Output = Vec3;
+
+    #[inline]
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        self.unchecked_mul_vec3(rhs)
     }
 }
 
