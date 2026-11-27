@@ -90,7 +90,7 @@ impl MouseDelta {
 
     #[inline]
     #[must_use]
-    pub fn max_component(self) -> f32 {
+    pub const fn max_component(self) -> f32 {
         self.x.abs().max(self.y.abs())
     }
 
@@ -129,6 +129,7 @@ impl MouseDelta {
 
 #[cfg(feature = "serde")]
 impl Serialize for MouseDelta {
+    #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -151,6 +152,7 @@ impl Serialize for MouseDelta {
 
 #[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for MouseDelta {
+    #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,

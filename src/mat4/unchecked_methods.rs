@@ -352,7 +352,7 @@ impl Mat4 {
 
     #[inline]
     #[must_use]
-    pub fn unchecked_transform_vector3(self, vector: Vec3) -> Vec3 {
+    pub const fn unchecked_transform_vector3(self, vector: Vec3) -> Vec3 {
         let result =
             self.unchecked_mul_vec4(Vec4::unchecked_new(vector.x, vector.y, vector.z, 0.0));
 

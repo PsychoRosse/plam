@@ -345,6 +345,7 @@ impl Mat4 {
 
 #[cfg(feature = "serde")]
 impl Serialize for Mat4 {
+    #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -366,6 +367,7 @@ impl Serialize for Mat4 {
 
 #[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for Mat4 {
+    #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,

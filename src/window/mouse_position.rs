@@ -126,6 +126,7 @@ impl MousePosition {
 
 #[cfg(feature = "serde")]
 impl Serialize for MousePosition {
+    #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -148,6 +149,7 @@ impl Serialize for MousePosition {
 
 #[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for MousePosition {
+    #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,

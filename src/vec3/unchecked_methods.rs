@@ -96,6 +96,7 @@ impl Vec3 {
     }
 
     #[inline]
+    #[must_use]
     pub const fn unchecked_distance_squared(self, rhs: Self) -> f32 {
         let dx = self.x - rhs.x;
         let dy = self.y - rhs.y;
@@ -118,6 +119,7 @@ impl Vec3 {
     }
 
     #[inline]
+    #[must_use]
     pub const fn unchecked_clamp(self, min: Self, max: Self) -> Self {
         Self::unchecked_new(
             self.x.clamp(min.x, max.x),

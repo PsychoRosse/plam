@@ -26,7 +26,7 @@ impl Mat4 {
     }
 
     #[inline]
-    pub fn unchecked_add_assign(&mut self, rhs: Self) {
+    pub const fn unchecked_add_assign(&mut self, rhs: Self) {
         *self = self.unchecked_add(rhs);
     }
 
@@ -42,7 +42,7 @@ impl Mat4 {
     }
 
     #[inline]
-    pub fn unchecked_sub_assign(&mut self, rhs: Self) {
+    pub const fn unchecked_sub_assign(&mut self, rhs: Self) {
         *self = self.unchecked_sub(rhs);
     }
 
@@ -78,7 +78,7 @@ impl Mat4 {
     }
 
     #[inline]
-    pub fn unchecked_mul_assign(&mut self, rhs: Self) {
+    pub const fn unchecked_mul_assign(&mut self, rhs: Self) {
         *self = self.unchecked_mul(rhs);
     }
 
@@ -121,7 +121,7 @@ impl Mat4 {
     }
 
     #[inline]
-    pub fn unchecked_mul_scalar_assign(&mut self, scalar: f32) {
+    pub const fn unchecked_mul_scalar_assign(&mut self, scalar: f32) {
         *self = self.unchecked_mul_scalar(scalar);
     }
 
@@ -137,7 +137,7 @@ impl Mat4 {
     }
 
     #[inline]
-    pub fn unchecked_div_scalar_assign(&mut self, scalar: f32) {
+    pub const fn unchecked_div_scalar_assign(&mut self, scalar: f32) {
         *self = self.unchecked_div_scalar(scalar);
     }
 }

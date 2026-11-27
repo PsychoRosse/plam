@@ -60,7 +60,7 @@ impl MouseScroll {
 
     #[inline]
     #[must_use]
-    pub fn max_component(self) -> f32 {
+    pub const fn max_component(self) -> f32 {
         self.delta().max_component()
     }
 

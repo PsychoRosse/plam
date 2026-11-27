@@ -219,6 +219,7 @@ impl From<Extent> for (u32, u32) {
 
 #[cfg(feature = "serde")]
 impl Serialize for Extent {
+    #[inline]
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut state = serializer.serialize_struct("Extent", 2)?;
 
@@ -231,6 +232,7 @@ impl Serialize for Extent {
 
 #[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for Extent {
+    #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,

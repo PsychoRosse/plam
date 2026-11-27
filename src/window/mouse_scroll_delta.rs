@@ -88,7 +88,7 @@ impl MouseScrollDelta {
 
     #[inline]
     #[must_use]
-    pub fn max_component(self) -> f32 {
+    pub const fn max_component(self) -> f32 {
         self.x.abs().max(self.y.abs())
     }
 
@@ -115,6 +115,7 @@ impl MouseScrollDelta {
     }
 
     #[inline]
+    #[must_use]
     pub fn is_approx_eq(self, rhs: Self, epsilon: f32) -> bool {
         if !self.is_finite() || !rhs.is_finite() || !epsilon.is_finite() || epsilon < 0.0 {
             return false;
@@ -126,6 +127,7 @@ impl MouseScrollDelta {
 
 #[cfg(feature = "serde")]
 impl Serialize for MouseScrollDelta {
+    #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -148,6 +150,7 @@ impl Serialize for MouseScrollDelta {
 
 #[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for MouseScrollDelta {
+    #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
