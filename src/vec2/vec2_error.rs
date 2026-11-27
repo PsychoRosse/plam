@@ -6,12 +6,14 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Error, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Vec2Error {
-    #[error("Vector contains non-finite values")]
+    #[error("Vec2 input contains a non-finite value")]
     NonFiniteInput,
-    #[error("Vector has zero length and cannot be normalized")]
-    ZeroLength,
+    #[error("Vec2 operation produced a non-finite result")]
+    InvalidResult,
     #[error("Division by zero")]
     DivisionByZero,
-    #[error("Vector operation produced a non-finite result")]
-    InvalidResult,
+    #[error("Cannot normalize a zero-length vector")]
+    ZeroLength,
+    #[error("Invalid clamp range")]
+    InvalidRange,
 }

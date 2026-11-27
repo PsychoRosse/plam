@@ -1,4 +1,4 @@
-use crate::{Vec3, Vec3Error, Vec4Error};
+use crate::{Vec3, Vec4Error};
 
 use super::Vec4;
 
@@ -13,13 +13,22 @@ impl Vec4 {
     }
 
     #[inline]
+    pub const fn checked_from_array(values: [f32; 4]) -> Result<Self, Vec4Error> {
+        Self::checked_new(values[0], values[1], values[2], values[3])
+    }
+
+    #[inline]
     pub const fn checked_splat(value: f32) -> Result<Self, Vec4Error> {
         Self::checked_new(value, value, value, value)
     }
 
     #[inline]
-    pub const fn checked_xyz(self) -> Result<Vec3, Vec3Error> {
-        Vec3::checked_new(self.x, self.y, self.z)
+    pub const fn checked_xyz(self) -> Result<Vec3, Vec4Error> {
+        if !self.is_finite() {
+            return Err(Vec4Error::NonFiniteInput);
+        }
+
+        Ok(self.unchecked_xyz())
     }
 
     #[inline]
@@ -122,12 +131,23 @@ impl Vec4 {
             return Err(Vec4Error::NonFiniteInput);
         }
 
-        let dx = self.x as f64 - rhs.x as f64;
-        let dy = self.y as f64 - rhs.y as f64;
-        let dz = self.z as f64 - rhs.z as f64;
-        let dw = self.w as f64 - rhs.w as f64;
+        let dx = (self.x as f64 - rhs.x as f64).abs();
+        let dy = (self.y as f64 - rhs.y as f64).abs();
+        let dz = (self.z as f64 - rhs.z as f64).abs();
+        let dw = (self.w as f64 - rhs.w as f64).abs();
 
-        let result = (dx * dx + dy * dy + dz * dz + dw * dw).sqrt() as f32;
+        let scale = dx.max(dy).max(dz).max(dw);
+
+        if scale == 0.0 {
+            return Ok(0.0);
+        }
+
+        let x = dx / scale;
+        let y = dy / scale;
+        let z = dz / scale;
+        let w = dw / scale;
+
+        let result = (scale * (x * x + y * y + z * z + w * w).sqrt()) as f32;
 
         if !result.is_finite() {
             return Err(Vec4Error::InvalidResult);
@@ -152,10 +172,13 @@ impl Vec4 {
 
         let w = self.w as f64 + (rhs.w as f64 - self.w as f64) * t;
 
-        match Self::checked_new(x as f32, y as f32, z as f32, w as f32) {
-            Ok(value) => Ok(value),
-            Err(_) => Err(Vec4Error::InvalidResult),
+        let result = Self::unchecked_new(x as f32, y as f32, z as f32, w as f32);
+
+        if !result.is_finite() {
+            return Err(Vec4Error::InvalidResult);
         }
+
+        Ok(result)
     }
 
     #[inline]
@@ -183,5 +206,32 @@ impl Vec4 {
         }
 
         Ok(self.unchecked_max(rhs))
+    }
+
+    #[inline]
+    pub const fn checked_distance_squared(self, rhs: Self) -> Result<f64, Vec4Error> {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(Vec4Error::NonFiniteInput);
+        }
+
+        let dx = self.x as f64 - rhs.x as f64;
+        let dy = self.y as f64 - rhs.y as f64;
+        let dz = self.z as f64 - rhs.z as f64;
+        let dw = self.w as f64 - rhs.w as f64;
+
+        Ok(dx * dx + dy * dy + dz * dz + dw * dw)
+    }
+
+    #[inline]
+    pub const fn checked_clamp(self, min: Self, max: Self) -> Result<Self, Vec4Error> {
+        if !self.is_finite() || !min.is_finite() || !max.is_finite() {
+            return Err(Vec4Error::NonFiniteInput);
+        }
+
+        if min.x > max.x || min.y > max.y || min.z > max.z || min.w > max.w {
+            return Err(Vec4Error::InvalidRange);
+        }
+
+        Ok(self.unchecked_clamp(min, max))
     }
 }

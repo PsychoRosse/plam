@@ -1,7 +1,5 @@
 use crate::MouseScrollDeltaError;
 
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
 #[cfg(feature = "clama")]
 use clama::Event;
 #[cfg(feature = "serde")]
@@ -123,68 +121,6 @@ impl MouseScrollDelta {
         }
 
         (self.x - rhs.x).abs() <= epsilon && (self.y - rhs.y).abs() <= epsilon
-    }
-}
-
-impl Add for MouseScrollDelta {
-    type Output = Result<Self, MouseScrollDeltaError>;
-
-    #[inline]
-    fn add(self, rhs: Self) -> Self::Output {
-        self.checked_add(rhs)
-    }
-}
-
-impl Sub for MouseScrollDelta {
-    type Output = Result<Self, MouseScrollDeltaError>;
-
-    #[inline]
-    fn sub(self, rhs: Self) -> Self::Output {
-        self.checked_sub(rhs)
-    }
-}
-
-impl Mul<f32> for MouseScrollDelta {
-    type Output = Result<Self, MouseScrollDeltaError>;
-
-    #[inline]
-    fn mul(self, scalar: f32) -> Self::Output {
-        self.scaled(scalar)
-    }
-}
-
-impl Mul<MouseScrollDelta> for f32 {
-    type Output = Result<MouseScrollDelta, MouseScrollDeltaError>;
-
-    #[inline]
-    fn mul(self, rhs: MouseScrollDelta) -> Self::Output {
-        rhs * self
-    }
-}
-
-impl Div<f32> for MouseScrollDelta {
-    type Output = Result<Self, MouseScrollDeltaError>;
-
-    #[inline]
-    fn div(self, scalar: f32) -> Self::Output {
-        if !scalar.is_finite() {
-            return Err(MouseScrollDeltaError::NonFiniteInput);
-        }
-
-        if scalar == 0.0 {
-            return Err(MouseScrollDeltaError::DivisionByZero);
-        }
-
-        Self::new(self.x / scalar, self.y / scalar)
-    }
-}
-
-impl Neg for MouseScrollDelta {
-    type Output = Result<Self, MouseScrollDeltaError>;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        Self::new(-self.x, -self.y)
     }
 }
 

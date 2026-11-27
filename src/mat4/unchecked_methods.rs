@@ -37,7 +37,9 @@ impl Mat4 {
         near: f32,
         far: f32,
     ) -> Self {
-        Self::unchecked_from_orthographic_parts(left, right, bottom, top, near, far)
+        Self::unchecked_from_f64_array(Self::orthographic_parts(
+            left, right, bottom, top, near, far,
+        ))
     }
 
     #[inline]
@@ -133,7 +135,12 @@ impl Mat4 {
         near: f32,
         far: f32,
     ) -> Self {
-        Self::unchecked_from_perspective_parts(fov_y_degrees, aspect_ratio, near, far)
+        Self::unchecked_from_f64_array(Self::perspective_parts(
+            fov_y_degrees,
+            aspect_ratio,
+            near,
+            far,
+        ))
     }
 
     #[inline]
@@ -350,5 +357,157 @@ impl Mat4 {
             self.unchecked_mul_vec4(Vec4::unchecked_new(vector.x, vector.y, vector.z, 0.0));
 
         Vec3::unchecked_new(result.x, result.y, result.z)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_from_rotation_x(degrees: f32) -> Self {
+        let (sin, cos) = degrees.rem_euclid(360.0).to_radians().sin_cos();
+
+        Self::unchecked_new(
+            Vec4::unchecked_new(1.0, 0.0, 0.0, 0.0),
+            Vec4::unchecked_new(0.0, cos, sin, 0.0),
+            Vec4::unchecked_new(0.0, -sin, cos, 0.0),
+            Vec4::unchecked_new(0.0, 0.0, 0.0, 1.0),
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_from_rotation_y(degrees: f32) -> Self {
+        let (sin, cos) = degrees.rem_euclid(360.0).to_radians().sin_cos();
+
+        Self::unchecked_new(
+            Vec4::unchecked_new(cos, 0.0, -sin, 0.0),
+            Vec4::unchecked_new(0.0, 1.0, 0.0, 0.0),
+            Vec4::unchecked_new(sin, 0.0, cos, 0.0),
+            Vec4::unchecked_new(0.0, 0.0, 0.0, 1.0),
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_from_rotation_z(degrees: f32) -> Self {
+        let (sin, cos) = degrees.rem_euclid(360.0).to_radians().sin_cos();
+
+        Self::unchecked_new(
+            Vec4::unchecked_new(cos, sin, 0.0, 0.0),
+            Vec4::unchecked_new(-sin, cos, 0.0, 0.0),
+            Vec4::unchecked_new(0.0, 0.0, 1.0, 0.0),
+            Vec4::unchecked_new(0.0, 0.0, 0.0, 1.0),
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_from_axis_angle(axis: Vec3, degrees: f32) -> Self {
+        Self::unchecked_from_quat(Quat::unchecked_from_axis_angle(axis, degrees))
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_from_diagonal(diagonal: Vec4) -> Self {
+        Self::unchecked_new(
+            Vec4::unchecked_new(diagonal.x, 0.0, 0.0, 0.0),
+            Vec4::unchecked_new(0.0, diagonal.y, 0.0, 0.0),
+            Vec4::unchecked_new(0.0, 0.0, diagonal.z, 0.0),
+            Vec4::unchecked_new(0.0, 0.0, 0.0, diagonal.w),
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_look_at_lh(eye: Vec3, center: Vec3, up: Vec3) -> Self {
+        let forward = center.unchecked_sub(eye);
+        let forward_length = forward.unchecked_length();
+        let forward = forward.unchecked_div_scalar(forward_length);
+
+        let side = up.unchecked_cross(forward);
+        let side_length = side.unchecked_length();
+        let side = side.unchecked_div_scalar(side_length);
+        let up_corrected = forward.unchecked_cross(side);
+
+        let side_dot = side.unchecked_dot(eye);
+        let up_dot = up_corrected.unchecked_dot(eye);
+        let forward_dot = forward.unchecked_dot(eye);
+
+        Self::unchecked_new(
+            Vec4::unchecked_new(side.x, up_corrected.x, forward.x, 0.0),
+            Vec4::unchecked_new(side.y, up_corrected.y, forward.y, 0.0),
+            Vec4::unchecked_new(side.z, up_corrected.z, forward.z, 0.0),
+            Vec4::unchecked_new(-side_dot, -up_dot, -forward_dot, 1.0),
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_orthographic_lh(
+        left: f32,
+        right: f32,
+        bottom: f32,
+        top: f32,
+        near: f32,
+        far: f32,
+    ) -> Self {
+        Self::unchecked_from_f64_array(Self::orthographic_lh_parts(
+            left, right, bottom, top, near, far,
+        ))
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_perspective_lh(
+        fov_y_degrees: f32,
+        aspect_ratio: f32,
+        near: f32,
+        far: f32,
+    ) -> Self {
+        Self::unchecked_from_f64_array(Self::perspective_lh_parts(
+            fov_y_degrees,
+            aspect_ratio,
+            near,
+            far,
+        ))
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_perspective_infinite_rh(
+        fov_y_degrees: f32,
+        aspect_ratio: f32,
+        near: f32,
+    ) -> Self {
+        Self::unchecked_from_f64_array(Self::perspective_infinite_rh_parts(
+            fov_y_degrees,
+            aspect_ratio,
+            near,
+        ))
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_to_scale_rotation_translation(self) -> (Vec3, Quat, Vec3) {
+        let translation = Vec3::unchecked_new(self.w_axis.x, self.w_axis.y, self.w_axis.z);
+
+        let x = self.x_axis.unchecked_xyz();
+        let y = self.y_axis.unchecked_xyz();
+        let z = self.z_axis.unchecked_xyz();
+
+        let mut sx = x.unchecked_length();
+        let sy = y.unchecked_length();
+        let sz = z.unchecked_length();
+
+        if x.unchecked_dot(y.unchecked_cross(z)) < 0.0 {
+            sx = -sx;
+        }
+
+        let rotation = Quat::unchecked_from_mat4(Self::unchecked_new(
+            Vec4::unchecked_new(x.x / sx, x.y / sx, x.z / sx, 0.0),
+            Vec4::unchecked_new(y.x / sy, y.y / sy, y.z / sy, 0.0),
+            Vec4::unchecked_new(z.x / sz, z.y / sz, z.z / sz, 0.0),
+            Vec4::unchecked_new(0.0, 0.0, 0.0, 1.0),
+        ));
+
+        (Vec3::unchecked_new(sx, sy, sz), rotation, translation)
     }
 }

@@ -43,16 +43,6 @@ impl MousePosition {
     }
 
     #[inline]
-    pub const fn checked_sub(self, rhs: Self) -> Result<MouseDelta, MouseDeltaError> {
-        MouseDelta::new(self.x - rhs.x, self.y - rhs.y)
-    }
-
-    #[inline]
-    pub const fn checked_add(self, rhs: MouseDelta) -> Result<Self, MousePositionError> {
-        Self::new(self.x + rhs.x, self.y + rhs.y)
-    }
-
-    #[inline]
     pub const fn from_array(values: [f32; 2]) -> Result<Self, MousePositionError> {
         Self::new(values[0], values[1])
     }
@@ -104,6 +94,33 @@ impl MousePosition {
         }
 
         Self::new(self.x + (end.x - self.x) * t, self.y + (end.y - self.y) * t)
+    }
+
+    #[inline]
+    pub const fn checked_sub(self, rhs: Self) -> Result<MouseDelta, MouseDeltaError> {
+        MouseDelta::new(self.x - rhs.x, self.y - rhs.y)
+    }
+
+    #[inline]
+    pub const fn checked_add_delta(self, rhs: MouseDelta) -> Result<Self, MousePositionError> {
+        Self::new(self.x + rhs.x, self.y + rhs.y)
+    }
+
+    #[inline]
+    pub const fn checked_sub_delta(self, rhs: MouseDelta) -> Result<Self, MousePositionError> {
+        Self::new(self.x - rhs.x, self.y - rhs.y)
+    }
+
+    #[inline]
+    pub fn checked_add_assign_delta(&mut self, rhs: MouseDelta) -> Result<(), MousePositionError> {
+        *self = self.checked_add_delta(rhs)?;
+        Ok(())
+    }
+
+    #[inline]
+    pub fn checked_sub_assign_delta(&mut self, rhs: MouseDelta) -> Result<(), MousePositionError> {
+        *self = self.checked_sub_delta(rhs)?;
+        Ok(())
     }
 }
 

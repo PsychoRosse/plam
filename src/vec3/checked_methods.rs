@@ -13,6 +13,11 @@ impl Vec3 {
     }
 
     #[inline]
+    pub const fn checked_from_array(values: [f32; 3]) -> Result<Self, Vec3Error> {
+        Self::checked_new(values[0], values[1], values[2])
+    }
+
+    #[inline]
     pub const fn checked_splat(value: f32) -> Result<Self, Vec3Error> {
         Self::checked_new(value, value, value)
     }
@@ -77,10 +82,13 @@ impl Vec3 {
         let y = self.z as f64 * rhs.x as f64 - self.x as f64 * rhs.z as f64;
         let z = self.x as f64 * rhs.y as f64 - self.y as f64 * rhs.x as f64;
 
-        match Self::checked_new(x as f32, y as f32, z as f32) {
-            Ok(value) => Ok(value),
-            Err(_) => Err(Vec3Error::InvalidResult),
+        let result = Self::unchecked_new(x as f32, y as f32, z as f32);
+
+        if !result.is_finite() {
+            return Err(Vec3Error::InvalidResult);
         }
+
+        Ok(result)
     }
 
     #[inline]
@@ -119,11 +127,21 @@ impl Vec3 {
             return Err(Vec3Error::NonFiniteInput);
         }
 
-        let dx = self.x as f64 - rhs.x as f64;
-        let dy = self.y as f64 - rhs.y as f64;
-        let dz = self.z as f64 - rhs.z as f64;
+        let dx = (self.x as f64 - rhs.x as f64).abs();
+        let dy = (self.y as f64 - rhs.y as f64).abs();
+        let dz = (self.z as f64 - rhs.z as f64).abs();
 
-        let result = (dx * dx + dy * dy + dz * dz).sqrt() as f32;
+        let scale = dx.max(dy).max(dz);
+
+        if scale == 0.0 {
+            return Ok(0.0);
+        }
+
+        let x = dx / scale;
+        let y = dy / scale;
+        let z = dz / scale;
+
+        let result = (scale * (x * x + y * y + z * z).sqrt()) as f32;
 
         if !result.is_finite() {
             return Err(Vec3Error::InvalidResult);
@@ -150,5 +168,45 @@ impl Vec3 {
             Ok(value) => Ok(value),
             Err(_) => Err(Vec3Error::InvalidResult),
         }
+    }
+
+    #[inline]
+    pub const fn checked_abs(self) -> Result<Self, Vec3Error> {
+        if !self.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
+
+        Ok(self.unchecked_abs())
+    }
+
+    #[inline]
+    pub const fn checked_min(self, rhs: Self) -> Result<Self, Vec3Error> {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
+
+        Ok(self.unchecked_min(rhs))
+    }
+
+    #[inline]
+    pub const fn checked_max(self, rhs: Self) -> Result<Self, Vec3Error> {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
+
+        Ok(self.unchecked_max(rhs))
+    }
+
+    #[inline]
+    pub const fn checked_clamp(self, min: Self, max: Self) -> Result<Self, Vec3Error> {
+        if !self.is_finite() || !min.is_finite() || !max.is_finite() {
+            return Err(Vec3Error::NonFiniteInput);
+        }
+
+        if min.x > max.x || min.y > max.y || min.z > max.z {
+            return Err(Vec3Error::InvalidRange);
+        }
+
+        Ok(self.unchecked_clamp(min, max))
     }
 }

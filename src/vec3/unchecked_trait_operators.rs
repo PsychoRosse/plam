@@ -93,11 +93,25 @@ impl Mul<Vec3> for f32 {
     }
 }
 
+impl MulAssign<f32> for Vec3 {
+    #[inline]
+    fn mul_assign(&mut self, rhs: f32) {
+        *self = self.unchecked_mul_scalar(rhs)
+    }
+}
+
 impl Div<f32> for Vec3 {
     type Output = Self;
 
     #[inline]
     fn div(self, rhs: f32) -> Self::Output {
         self.unchecked_div_scalar(rhs)
+    }
+}
+
+impl DivAssign<f32> for Vec3 {
+    #[inline]
+    fn div_assign(&mut self, rhs: f32) {
+        *self = self.unchecked_div_scalar(rhs)
     }
 }

@@ -1,4 +1,4 @@
-use crate::{QuatError, Vec3};
+use crate::{Mat4, QuatError, Vec3};
 
 use super::Quat;
 
@@ -61,10 +61,11 @@ impl Quat {
 
     #[inline]
     pub const fn checked_xyz(self) -> Result<Vec3, QuatError> {
-        match Vec3::checked_new(self.x, self.y, self.z) {
-            Ok(value) => Ok(value),
-            Err(_) => Err(QuatError::InvalidResult),
+        if !self.is_finite() {
+            return Err(QuatError::NonFiniteInput);
         }
+
+        Ok(self.unchecked_xyz())
     }
 
     #[inline]
@@ -186,7 +187,7 @@ impl Quat {
 
         let dot = a.checked_dot(b)? as f32;
 
-        Ok((1.0 - dot).abs() <= epsilon)
+        Ok((1.0 - dot.abs()).abs() <= epsilon)
     }
 
     #[inline]
@@ -264,17 +265,17 @@ impl Quat {
         let mut end = end.checked_normalize()?;
         let mut dot = start.checked_dot(end)? as f32;
 
+        if dot < 0.0 {
+            end = end.checked_neg()?;
+            dot = -dot;
+        }
+
         if t == 0.0 {
             return Ok(start);
         }
 
         if t == 1.0 {
             return Ok(end);
-        }
-
-        if dot < 0.0 {
-            end = end.checked_neg()?;
-            dot = -dot;
         }
 
         dot = dot.clamp(0.0, 1.0);
@@ -305,5 +306,135 @@ impl Quat {
             .checked_mul_scalar(a)?
             .checked_add(end.checked_mul_scalar(b)?)?
             .checked_normalize()
+    }
+
+    #[inline]
+    pub fn checked_to_scaled_axis(self) -> Result<Vec3, QuatError> {
+        if !self.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        let result = self.checked_normalize()?.unchecked_to_scaled_axis();
+
+        if !result.is_finite() {
+            return Err(QuatError::InvalidResult);
+        }
+
+        Ok(result)
+    }
+
+    #[inline]
+    pub fn checked_to_euler(self) -> Result<(f32, f32, f32), QuatError> {
+        if !self.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        let result = self.checked_normalize()?.unchecked_to_euler();
+
+        if !result.0.is_finite() || !result.1.is_finite() || !result.2.is_finite() {
+            return Err(QuatError::InvalidResult);
+        }
+
+        Ok(result)
+    }
+
+    #[inline]
+    pub fn checked_from_mat4(rotation: Mat4) -> Result<Self, QuatError> {
+        if !rotation.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        let result = Self::unchecked_from_mat4(rotation);
+
+        if !result.is_finite() {
+            return Err(QuatError::InvalidResult);
+        }
+
+        Ok(result)
+    }
+
+    #[inline]
+    pub fn checked_to_mat4(self) -> Result<Mat4, QuatError> {
+        if !self.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        let result = Mat4::unchecked_from_quat(self.checked_normalize()?);
+
+        if !result.is_finite() {
+            return Err(QuatError::InvalidResult);
+        }
+
+        Ok(result)
+    }
+
+    #[inline]
+    pub fn checked_lerp(self, rhs: Self, t: f32) -> Result<Self, QuatError> {
+        if !self.is_finite() || !rhs.is_finite() || !t.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        let result = self.unchecked_lerp(rhs, t);
+
+        if !result.is_finite() {
+            return Err(QuatError::InvalidResult);
+        }
+
+        Ok(result)
+    }
+
+    #[inline]
+    pub fn checked_nlerp(self, rhs: Self, t: f32) -> Result<Self, QuatError> {
+        if !self.is_finite() || !rhs.is_finite() || !t.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        let start = self.checked_normalize()?;
+        let end = rhs.checked_normalize()?;
+
+        let result = start.unchecked_nlerp(end, t);
+
+        if !result.is_finite() {
+            return Err(QuatError::InvalidResult);
+        }
+
+        Ok(result)
+    }
+
+    #[inline]
+    pub fn checked_from_rotation_arc(from: Vec3, to: Vec3) -> Result<Self, QuatError> {
+        if !from.is_finite() || !to.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        if from.is_zero() || to.is_zero() {
+            return Err(QuatError::InvalidAxis);
+        }
+
+        let result = Self::unchecked_from_rotation_arc(from, to);
+
+        if !result.is_finite() {
+            return Err(QuatError::InvalidResult);
+        }
+
+        Ok(result)
+    }
+
+    #[inline]
+    pub fn checked_angle_between(self, rhs: Self) -> Result<f32, QuatError> {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(QuatError::NonFiniteInput);
+        }
+
+        let a = self.checked_normalize()?;
+        let b = rhs.checked_normalize()?;
+
+        let result = a.unchecked_angle_between(b);
+
+        if !result.is_finite() {
+            return Err(QuatError::InvalidResult);
+        }
+
+        Ok(result)
     }
 }

@@ -13,6 +13,11 @@ impl Vec2 {
     }
 
     #[inline]
+    pub const fn checked_from_array(values: [f32; 2]) -> Result<Self, Vec2Error> {
+        Self::checked_new(values[0], values[1])
+    }
+
+    #[inline]
     pub const fn checked_splat(value: f32) -> Result<Self, Vec2Error> {
         Self::checked_new(value, value)
     }
@@ -135,5 +140,66 @@ impl Vec2 {
         }
 
         Ok(Self::unchecked_new(-self.y, self.x))
+    }
+
+    #[inline]
+    pub const fn checked_abs(self) -> Result<Self, Vec2Error> {
+        if !self.is_finite() {
+            return Err(Vec2Error::NonFiniteInput);
+        }
+
+        Ok(self.unchecked_abs())
+    }
+
+    #[inline]
+    pub const fn checked_min(self, rhs: Self) -> Result<Self, Vec2Error> {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(Vec2Error::NonFiniteInput);
+        }
+
+        Ok(self.unchecked_min(rhs))
+    }
+
+    #[inline]
+    pub const fn checked_max(self, rhs: Self) -> Result<Self, Vec2Error> {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(Vec2Error::NonFiniteInput);
+        }
+
+        Ok(self.unchecked_max(rhs))
+    }
+
+    #[inline]
+    pub const fn checked_cross(self, rhs: Self) -> Result<f64, Vec2Error> {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(Vec2Error::NonFiniteInput);
+        }
+
+        Ok(self.x as f64 * rhs.y as f64 - self.y as f64 * rhs.x as f64)
+    }
+
+    #[inline]
+    pub const fn checked_distance_squared(self, rhs: Self) -> Result<f64, Vec2Error> {
+        if !self.is_finite() || !rhs.is_finite() {
+            return Err(Vec2Error::NonFiniteInput);
+        }
+
+        let dx = self.x as f64 - rhs.x as f64;
+        let dy = self.y as f64 - rhs.y as f64;
+
+        Ok(dx * dx + dy * dy)
+    }
+
+    #[inline]
+    pub const fn checked_clamp(self, min: Self, max: Self) -> Result<Self, Vec2Error> {
+        if !self.is_finite() || !min.is_finite() || !max.is_finite() {
+            return Err(Vec2Error::NonFiniteInput);
+        }
+
+        if min.x > max.x || min.y > max.y {
+            return Err(Vec2Error::InvalidRange);
+        }
+
+        Ok(self.unchecked_clamp(min, max))
     }
 }

@@ -1,6 +1,6 @@
 use super::Vec4;
 
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 impl Neg for Vec4 {
     type Output = Self;
@@ -20,12 +20,26 @@ impl Add for Vec4 {
     }
 }
 
+impl AddAssign for Vec4 {
+    #[inline]
+    fn add_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_add(rhs)
+    }
+}
+
 impl Sub for Vec4 {
     type Output = Self;
 
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         self.unchecked_sub(rhs)
+    }
+}
+
+impl SubAssign for Vec4 {
+    #[inline]
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_sub(rhs)
     }
 }
 
@@ -38,12 +52,26 @@ impl Mul for Vec4 {
     }
 }
 
+impl MulAssign for Vec4 {
+    #[inline]
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_mul(rhs)
+    }
+}
+
 impl Div for Vec4 {
     type Output = Self;
 
     #[inline]
     fn div(self, rhs: Self) -> Self::Output {
         self.unchecked_div(rhs)
+    }
+}
+
+impl DivAssign for Vec4 {
+    #[inline]
+    fn div_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_div(rhs)
     }
 }
 
@@ -65,11 +93,25 @@ impl Mul<Vec4> for f32 {
     }
 }
 
+impl MulAssign<f32> for Vec4 {
+    #[inline]
+    fn mul_assign(&mut self, rhs: f32) {
+        *self = self.unchecked_mul_scalar(rhs)
+    }
+}
+
 impl Div<f32> for Vec4 {
     type Output = Self;
 
     #[inline]
     fn div(self, rhs: f32) -> Self::Output {
         self.unchecked_div_scalar(rhs)
+    }
+}
+
+impl DivAssign<f32> for Vec4 {
+    #[inline]
+    fn div_assign(&mut self, rhs: f32) {
+        *self = self.unchecked_div_scalar(rhs)
     }
 }

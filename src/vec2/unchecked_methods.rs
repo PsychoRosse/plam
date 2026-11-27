@@ -9,6 +9,12 @@ impl Vec2 {
 
     #[inline]
     #[must_use]
+    pub const fn unchecked_from_array(values: [f32; 2]) -> Self {
+        Self::unchecked_new(values[0], values[1])
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn unchecked_splat(value: f32) -> Self {
         Self::unchecked_new(value, value)
     }
@@ -58,5 +64,44 @@ impl Vec2 {
     #[must_use]
     pub const fn unchecked_perpendicular(self) -> Self {
         Self::unchecked_new(-self.y, self.x)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_abs(self) -> Self {
+        Self::unchecked_new(self.x.abs(), self.y.abs())
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_min(self, rhs: Self) -> Self {
+        Self::unchecked_new(self.x.min(rhs.x), self.y.min(rhs.y))
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_max(self, rhs: Self) -> Self {
+        Self::unchecked_new(self.x.max(rhs.x), self.y.max(rhs.y))
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_cross(self, rhs: Self) -> f32 {
+        self.x * rhs.y - self.y * rhs.x
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_distance_squared(self, rhs: Self) -> f32 {
+        let dx = self.x - rhs.x;
+        let dy = self.y - rhs.y;
+
+        dx * dx + dy * dy
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_clamp(self, min: Self, max: Self) -> Self {
+        Self::unchecked_new(self.x.clamp(min.x, max.x), self.y.clamp(min.y, max.y))
     }
 }

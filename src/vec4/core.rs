@@ -26,6 +26,18 @@ impl Vec4 {
 
 impl Vec4 {
     #[inline]
+    pub fn is_approx_eq(self, rhs: Self, epsilon: f32) -> bool {
+        if !self.is_finite() || !rhs.is_finite() || !epsilon.is_finite() || epsilon < 0.0 {
+            return false;
+        }
+
+        (self.x - rhs.x).abs() <= epsilon
+            && (self.y - rhs.y).abs() <= epsilon
+            && (self.z - rhs.z).abs() <= epsilon
+            && (self.w - rhs.w).abs() <= epsilon
+    }
+
+    #[inline]
     #[must_use]
     pub const fn is_finite(self) -> bool {
         self.x.is_finite() && self.y.is_finite() && self.z.is_finite() && self.w.is_finite()

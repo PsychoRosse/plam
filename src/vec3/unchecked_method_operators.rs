@@ -58,8 +58,18 @@ impl Vec3 {
     }
 
     #[inline]
+    pub fn unchecked_mul_scalar_assign(&mut self, scalar: f32) {
+        *self = Self::unchecked_new(self.x * scalar, self.y * scalar, self.z * scalar)
+    }
+
+    #[inline]
     #[must_use]
     pub const fn unchecked_div_scalar(self, scalar: f32) -> Self {
         Self::unchecked_new(self.x / scalar, self.y / scalar, self.z / scalar)
+    }
+
+    #[inline]
+    pub fn unchecked_div_scalar_assign(&mut self, scalar: f32) {
+        *self = Self::unchecked_new(self.x / scalar, self.y / scalar, self.z / scalar)
     }
 }

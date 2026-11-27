@@ -20,8 +20,12 @@ pub enum Mat4Error {
     InvalidLookAtParameters,
     #[error("Invalid quaternion")]
     InvalidQuaternion,
+    #[error("Axis must be finite and non-zero")]
+    InvalidAxis,
     #[error("Matrix operation produced a non-finite result")]
     InvalidResult,
+    #[error("Division by zero")]
+    DivisionByZero,
     #[error("Homogeneous coordinate is zero")]
     ZeroHomogeneousCoordinate,
 }

@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 #[cfg(feature = "clama")]
 use clama::Event;
 #[cfg(feature = "serde")]
@@ -6,8 +8,8 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStru
 #[cfg_attr(feature = "clama", derive(Event))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Extent {
-    pub(crate) width: std::num::NonZero<u32>,
-    pub(crate) height: std::num::NonZero<u32>,
+    pub(crate) width: NonZeroU32,
+    pub(crate) height: NonZeroU32,
 }
 
 impl Extent {
@@ -53,8 +55,8 @@ impl Extent {
         }
 
         Self {
-            width: std::num::NonZero::<u32>::new(width).unwrap(),
-            height: std::num::NonZero::<u32>::new(height).unwrap(),
+            width: NonZeroU32::new(width).unwrap(),
+            height: NonZeroU32::new(height).unwrap(),
         }
     }
 

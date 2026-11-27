@@ -93,7 +93,7 @@ impl Mat4 {
     #[inline]
     #[must_use]
     pub const fn is_approx_eq(self, rhs: Self, epsilon: f32) -> bool {
-        if !epsilon.is_finite() || epsilon < 0.0 {
+        if !self.is_finite() || !rhs.is_finite() || !epsilon.is_finite() || epsilon < 0.0 {
             return false;
         }
 
@@ -114,19 +114,75 @@ impl Mat4 {
     }
 
     #[inline]
-    pub(crate) fn unchecked_from_perspective_parts(
+    #[must_use]
+    pub const fn is_identity(self) -> bool {
+        self.is_approx_eq(Self::IDENTITY, 1e-6)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn x_axis(self) -> Vec4 {
+        self.x_axis
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn y_axis(self) -> Vec4 {
+        self.y_axis
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn z_axis(self) -> Vec4 {
+        self.z_axis
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn w_axis(self) -> Vec4 {
+        self.w_axis
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn col(self, index: usize) -> Vec4 {
+        match index {
+            0 => self.x_axis,
+            1 => self.y_axis,
+            2 => self.z_axis,
+            3 => self.w_axis,
+            _ => panic!("column index out of bounds"),
+        }
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn row(self, index: usize) -> Vec4 {
+        let a = self.to_cols_array_2d();
+
+        match index {
+            0 => Vec4::unchecked_new(a[0][0], a[1][0], a[2][0], a[3][0]),
+            1 => Vec4::unchecked_new(a[0][1], a[1][1], a[2][1], a[3][1]),
+            2 => Vec4::unchecked_new(a[0][2], a[1][2], a[2][2], a[3][2]),
+            3 => Vec4::unchecked_new(a[0][3], a[1][3], a[2][3], a[3][3]),
+            _ => panic!("row index out of bounds"),
+        }
+    }
+
+    #[inline]
+    pub(crate) fn perspective_parts(
         fov_y_degrees: f32,
         aspect_ratio: f32,
         near: f32,
         far: f32,
-    ) -> Self {
+    ) -> [f64; 16] {
         let half_angle = (fov_y_degrees as f64).to_radians() * 0.5;
         let f = 1.0 / half_angle.tan();
         let aspect = aspect_ratio as f64;
         let near = near as f64;
         let far = far as f64;
 
-        Self::unchecked_from_f64_array([
+        [
             f / aspect,
             0.0,
             0.0,
@@ -143,18 +199,18 @@ impl Mat4 {
             0.0,
             (near * far) / (near - far),
             0.0,
-        ])
+        ]
     }
 
     #[inline]
-    pub(crate) const fn unchecked_from_orthographic_parts(
+    pub(crate) const fn orthographic_parts(
         left: f32,
         right: f32,
         bottom: f32,
         top: f32,
         near: f32,
         far: f32,
-    ) -> Self {
+    ) -> [f64; 16] {
         let (left, right, bottom, top, near, far) = (
             left as f64,
             right as f64,
@@ -164,7 +220,7 @@ impl Mat4 {
             far as f64,
         );
 
-        Self::unchecked_from_f64_array([
+        [
             2.0 / (right - left),
             0.0,
             0.0,
@@ -175,13 +231,115 @@ impl Mat4 {
             0.0,
             0.0,
             0.0,
-            -2.0 / (far - near),
+            -1.0 / (far - near),
             0.0,
             -(right + left) / (right - left),
             -(top + bottom) / (top - bottom),
-            -(far + near) / (far - near),
+            -near / (far - near),
             1.0,
-        ])
+        ]
+    }
+
+    #[inline]
+    pub(crate) fn perspective_lh_parts(
+        fov_y_degrees: f32,
+        aspect_ratio: f32,
+        near: f32,
+        far: f32,
+    ) -> [f64; 16] {
+        let half_angle = (fov_y_degrees as f64).to_radians() * 0.5;
+        let f = 1.0 / half_angle.tan();
+        let aspect = aspect_ratio as f64;
+        let near = near as f64;
+        let far = far as f64;
+
+        [
+            f / aspect,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            f,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            far / (far - near),
+            1.0,
+            0.0,
+            0.0,
+            -(near * far) / (far - near),
+            0.0,
+        ]
+    }
+
+    #[inline]
+    pub(crate) const fn orthographic_lh_parts(
+        left: f32,
+        right: f32,
+        bottom: f32,
+        top: f32,
+        near: f32,
+        far: f32,
+    ) -> [f64; 16] {
+        let (left, right, bottom, top, near, far) = (
+            left as f64,
+            right as f64,
+            bottom as f64,
+            top as f64,
+            near as f64,
+            far as f64,
+        );
+
+        [
+            2.0 / (right - left),
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            2.0 / (top - bottom),
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0 / (far - near),
+            0.0,
+            -(right + left) / (right - left),
+            -(top + bottom) / (top - bottom),
+            -near / (far - near),
+            1.0,
+        ]
+    }
+
+    #[inline]
+    pub(crate) fn perspective_infinite_rh_parts(
+        fov_y_degrees: f32,
+        aspect_ratio: f32,
+        near: f32,
+    ) -> [f64; 16] {
+        let half_angle = (fov_y_degrees as f64).to_radians() * 0.5;
+        let f = 1.0 / half_angle.tan();
+        let aspect = aspect_ratio as f64;
+        let near = near as f64;
+
+        [
+            f / aspect,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            f,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -1.0,
+            -1.0,
+            0.0,
+            0.0,
+            -near,
+            0.0,
+        ]
     }
 }
 

@@ -52,6 +52,13 @@ impl Mat4 {
             .checked_dot(eye)
             .map_err(|_| Mat4Error::InvalidResult)?;
 
+        if side_dot.abs() > f32::MAX as f64
+            || up_dot.abs() > f32::MAX as f64
+            || forward_dot.abs() > f32::MAX as f64
+        {
+            return Err(Mat4Error::InvalidResult);
+        }
+
         Self::checked_new(
             Vec4::checked_new(side.x, up_corrected.x, -forward.x, 0.0)
                 .map_err(|_| Mat4Error::InvalidResult)?,
@@ -92,7 +99,7 @@ impl Mat4 {
             return Err(Mat4Error::InvalidOrthographicParameters);
         }
 
-        Ok(Self::unchecked_from_orthographic_parts(
+        Self::checked_from_f64_array(Self::orthographic_parts(
             left, right, bottom, top, near, far,
         ))
     }
@@ -120,7 +127,7 @@ impl Mat4 {
             return Err(Mat4Error::InvalidPerspectiveParameters);
         }
 
-        Ok(Self::unchecked_from_perspective_parts(
+        Self::checked_from_f64_array(Self::perspective_parts(
             fov_y_degrees,
             aspect_ratio,
             near,
@@ -168,11 +175,15 @@ impl Mat4 {
 
     #[inline]
     pub fn checked_from_quat(rotation: Quat) -> Result<Self, Mat4Error> {
-        let q = rotation
+        if !rotation.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        let rotation = rotation
             .checked_normalize()
             .map_err(|_| Mat4Error::InvalidQuaternion)?;
 
-        Ok(Self::unchecked_from_quat(q))
+        Ok(Self::unchecked_from_quat(rotation))
     }
 
     #[inline]
@@ -405,5 +416,240 @@ impl Mat4 {
         )?;
 
         Vec3::checked_new(result.x, result.y, result.z).map_err(|_| Mat4Error::InvalidResult)
+    }
+
+    #[inline]
+    pub fn checked_from_rotation_x(degrees: f32) -> Result<Self, Mat4Error> {
+        if !degrees.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        Ok(Self::unchecked_from_rotation_x(degrees))
+    }
+
+    #[inline]
+    pub fn checked_from_rotation_y(degrees: f32) -> Result<Self, Mat4Error> {
+        if !degrees.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        Ok(Self::unchecked_from_rotation_y(degrees))
+    }
+
+    #[inline]
+    pub fn checked_from_rotation_z(degrees: f32) -> Result<Self, Mat4Error> {
+        if !degrees.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        Ok(Self::unchecked_from_rotation_z(degrees))
+    }
+
+    #[inline]
+    pub fn checked_from_axis_angle(axis: Vec3, degrees: f32) -> Result<Self, Mat4Error> {
+        if !axis.is_finite() || !degrees.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        let scale = axis.x.abs().max(axis.y.abs()).max(axis.z.abs());
+
+        if scale == 0.0 {
+            return Err(Mat4Error::InvalidAxis);
+        }
+
+        Ok(Self::unchecked_from_axis_angle(axis, degrees))
+    }
+
+    #[inline]
+    pub const fn checked_from_diagonal(diagonal: Vec4) -> Result<Self, Mat4Error> {
+        if !diagonal.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        Ok(Self::unchecked_from_diagonal(diagonal))
+    }
+
+    #[inline]
+    pub fn checked_look_at_lh(eye: Vec3, center: Vec3, up: Vec3) -> Result<Self, Mat4Error> {
+        if !eye.is_finite() || !center.is_finite() || !up.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        let forward = center
+            .checked_sub(eye)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+        let forward_length = forward
+            .checked_length()
+            .map_err(|_| Mat4Error::InvalidResult)?;
+
+        if forward_length == 0.0 {
+            return Err(Mat4Error::InvalidLookAtParameters);
+        }
+
+        let forward = forward
+            .checked_div_scalar(forward_length)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+
+        let side = up
+            .checked_cross(forward)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+        let side_length = side
+            .checked_length()
+            .map_err(|_| Mat4Error::InvalidResult)?;
+
+        if side_length == 0.0 {
+            return Err(Mat4Error::InvalidLookAtParameters);
+        }
+
+        let side = side
+            .checked_div_scalar(side_length)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+        let up_corrected = forward
+            .checked_cross(side)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+
+        let side_dot = side
+            .checked_dot(eye)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+        let up_dot = up_corrected
+            .checked_dot(eye)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+        let forward_dot = forward
+            .checked_dot(eye)
+            .map_err(|_| Mat4Error::InvalidResult)?;
+
+        if side_dot.abs() > f32::MAX as f64
+            || up_dot.abs() > f32::MAX as f64
+            || forward_dot.abs() > f32::MAX as f64
+        {
+            return Err(Mat4Error::InvalidResult);
+        }
+
+        Self::checked_new(
+            Vec4::checked_new(side.x, up_corrected.x, forward.x, 0.0)
+                .map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::checked_new(side.y, up_corrected.y, forward.y, 0.0)
+                .map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::checked_new(side.z, up_corrected.z, forward.z, 0.0)
+                .map_err(|_| Mat4Error::InvalidResult)?,
+            Vec4::checked_new(
+                -(side_dot as f32),
+                -(up_dot as f32),
+                -(forward_dot as f32),
+                1.0,
+            )
+            .map_err(|_| Mat4Error::InvalidResult)?,
+        )
+    }
+
+    #[inline]
+    pub const fn checked_orthographic_lh(
+        left: f32,
+        right: f32,
+        bottom: f32,
+        top: f32,
+        near: f32,
+        far: f32,
+    ) -> Result<Self, Mat4Error> {
+        if !left.is_finite()
+            || !right.is_finite()
+            || !bottom.is_finite()
+            || !top.is_finite()
+            || !near.is_finite()
+            || !far.is_finite()
+        {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        if left == right || bottom == top || near == far {
+            return Err(Mat4Error::InvalidOrthographicParameters);
+        }
+
+        Self::checked_from_f64_array(Self::orthographic_lh_parts(
+            left, right, bottom, top, near, far,
+        ))
+    }
+
+    #[inline]
+    pub fn checked_perspective_lh(
+        fov_y_degrees: f32,
+        aspect_ratio: f32,
+        near: f32,
+        far: f32,
+    ) -> Result<Self, Mat4Error> {
+        if !fov_y_degrees.is_finite()
+            || !aspect_ratio.is_finite()
+            || !near.is_finite()
+            || !far.is_finite()
+        {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        if !(0.0 < fov_y_degrees && fov_y_degrees < 180.0)
+            || aspect_ratio <= 0.0
+            || near <= 0.0
+            || far <= near
+        {
+            return Err(Mat4Error::InvalidPerspectiveParameters);
+        }
+
+        Self::checked_from_f64_array(Self::perspective_lh_parts(
+            fov_y_degrees,
+            aspect_ratio,
+            near,
+            far,
+        ))
+    }
+
+    #[inline]
+    pub fn checked_perspective_infinite_rh(
+        fov_y_degrees: f32,
+        aspect_ratio: f32,
+        near: f32,
+    ) -> Result<Self, Mat4Error> {
+        if !fov_y_degrees.is_finite() || !aspect_ratio.is_finite() || !near.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        if !(0.0 < fov_y_degrees && fov_y_degrees < 180.0) || aspect_ratio <= 0.0 || near <= 0.0 {
+            return Err(Mat4Error::InvalidPerspectiveParameters);
+        }
+
+        Self::checked_from_f64_array(Self::perspective_infinite_rh_parts(
+            fov_y_degrees,
+            aspect_ratio,
+            near,
+        ))
+    }
+
+    #[inline]
+    pub fn checked_to_scale_rotation_translation(self) -> Result<(Vec3, Quat, Vec3), Mat4Error> {
+        if !self.is_finite() {
+            return Err(Mat4Error::NonFiniteInput);
+        }
+
+        let x = self.x_axis.unchecked_xyz();
+        let y = self.y_axis.unchecked_xyz();
+        let z = self.z_axis.unchecked_xyz();
+
+        let sx = x.unchecked_length();
+        let sy = y.unchecked_length();
+        let sz = z.unchecked_length();
+
+        if sx == 0.0 || sy == 0.0 || sz == 0.0 {
+            return Err(Mat4Error::SingularMatrix);
+        }
+
+        if x.unchecked_dot(y.unchecked_cross(z)) == 0.0 {
+            return Err(Mat4Error::SingularMatrix);
+        }
+
+        let result = self.unchecked_to_scale_rotation_translation();
+
+        if !result.0.is_finite() || !result.1.is_finite() || !result.2.is_finite() {
+            return Err(Mat4Error::InvalidResult);
+        }
+
+        Ok(result)
     }
 }

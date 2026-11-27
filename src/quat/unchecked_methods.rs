@@ -1,4 +1,4 @@
-use crate::Vec3;
+use crate::{Mat4, Vec3};
 
 use super::Quat;
 
@@ -211,17 +211,17 @@ impl Quat {
         let mut end = end.unchecked_normalize();
         let mut dot = start.unchecked_dot(end);
 
+        if dot < 0.0 {
+            end = end.unchecked_neg();
+            dot = -dot;
+        }
+
         if t == 0.0 {
             return start;
         }
 
         if t == 1.0 {
             return end;
-        }
-
-        if dot < 0.0 {
-            end = end.unchecked_neg();
-            dot = -dot;
         }
 
         dot = dot.clamp(0.0, 1.0);
@@ -252,5 +252,137 @@ impl Quat {
             .unchecked_mul_scalar(a)
             .unchecked_add(end.unchecked_mul_scalar(b))
             .unchecked_normalize()
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_to_scaled_axis(self) -> Vec3 {
+        let (axis, angle) = self.unchecked_to_axis_angle();
+
+        axis.unchecked_mul_scalar(angle)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_to_euler(self) -> (f32, f32, f32) {
+        let q = self.unchecked_normalize();
+
+        let sin_y = 2.0 * (q.x * q.z + q.w * q.y);
+        let y = sin_y.clamp(-1.0, 1.0).asin();
+
+        let (x, z) = if sin_y.abs() < 0.999999 {
+            let x = (2.0 * (q.w * q.x - q.y * q.z)).atan2(1.0 - 2.0 * (q.x * q.x + q.y * q.y));
+            let z = (2.0 * (q.w * q.z - q.x * q.y)).atan2(1.0 - 2.0 * (q.y * q.y + q.z * q.z));
+
+            (x, z)
+        } else {
+            let x = (2.0 * (q.w * q.x + q.y * q.z)).atan2(1.0 - 2.0 * (q.x * q.x + q.z * q.z));
+
+            (x, 0.0)
+        };
+
+        (x.to_degrees(), y.to_degrees(), z.to_degrees())
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_from_mat4(rotation: Mat4) -> Self {
+        let a = rotation.to_cols_array_2d();
+        let (m00, m01, m02) = (a[0][0], a[1][0], a[2][0]);
+        let (m10, m11, m12) = (a[0][1], a[1][1], a[2][1]);
+        let (m20, m21, m22) = (a[0][2], a[1][2], a[2][2]);
+
+        let trace = m00 + m11 + m22;
+
+        let result = if trace > 0.0 {
+            let s = (trace + 1.0).sqrt() * 2.0;
+
+            Self::unchecked_new((m21 - m12) / s, (m02 - m20) / s, (m10 - m01) / s, 0.25 * s)
+        } else if m00 > m11 && m00 > m22 {
+            let s = (1.0 + m00 - m11 - m22).sqrt() * 2.0;
+
+            Self::unchecked_new(0.25 * s, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s)
+        } else if m11 > m22 {
+            let s = (1.0 + m11 - m00 - m22).sqrt() * 2.0;
+
+            Self::unchecked_new((m01 + m10) / s, 0.25 * s, (m12 + m21) / s, (m02 - m20) / s)
+        } else {
+            let s = (1.0 + m22 - m00 - m11).sqrt() * 2.0;
+
+            Self::unchecked_new((m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s)
+        };
+
+        result.unchecked_normalize()
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_to_mat4(self) -> Mat4 {
+        Mat4::unchecked_from_quat(self)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_lerp(self, rhs: Self, t: f32) -> Self {
+        Self::unchecked_new(
+            self.x + (rhs.x - self.x) * t,
+            self.y + (rhs.y - self.y) * t,
+            self.z + (rhs.z - self.z) * t,
+            self.w + (rhs.w - self.w) * t,
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_nlerp(self, rhs: Self, t: f32) -> Self {
+        let start = self.unchecked_normalize();
+        let mut end = rhs.unchecked_normalize();
+
+        if start.unchecked_dot(end) < 0.0 {
+            end = end.unchecked_neg();
+        }
+
+        start.unchecked_lerp(end, t).unchecked_normalize()
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_from_rotation_arc(from: Vec3, to: Vec3) -> Self {
+        let from = from.unchecked_normalize();
+        let to = to.unchecked_normalize();
+
+        let dot = from.unchecked_dot(to);
+
+        if dot >= 0.999999 {
+            return Self::IDENTITY;
+        }
+
+        if dot <= -0.999999 {
+            let axis = if from.x.abs() < from.y.abs() && from.x.abs() < from.z.abs() {
+                Vec3::unchecked_new(1.0, 0.0, 0.0).unchecked_cross(from)
+            } else if from.y.abs() < from.z.abs() {
+                Vec3::unchecked_new(0.0, 1.0, 0.0).unchecked_cross(from)
+            } else {
+                Vec3::unchecked_new(0.0, 0.0, 1.0).unchecked_cross(from)
+            };
+            let axis = axis.unchecked_normalize();
+
+            return Self::unchecked_new(axis.x, axis.y, axis.z, 0.0);
+        }
+
+        let axis = from.unchecked_cross(to);
+
+        Self::unchecked_new(axis.x, axis.y, axis.z, 1.0 + dot).unchecked_normalize()
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn unchecked_angle_between(self, rhs: Self) -> f32 {
+        let a = self.unchecked_normalize();
+        let b = rhs.unchecked_normalize();
+
+        let dot = a.unchecked_dot(b).abs().clamp(0.0, 1.0);
+
+        2.0 * dot.acos().to_degrees()
     }
 }

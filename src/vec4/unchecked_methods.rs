@@ -11,6 +11,12 @@ impl Vec4 {
 
     #[inline]
     #[must_use]
+    pub const fn unchecked_from_array(values: [f32; 4]) -> Self {
+        Self::unchecked_new(values[0], values[1], values[2], values[3])
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn unchecked_splat(value: f32) -> Self {
         Self::unchecked_new(value, value, value, value)
     }
@@ -94,6 +100,28 @@ impl Vec4 {
             self.y.max(rhs.y),
             self.z.max(rhs.z),
             self.w.max(rhs.w),
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_distance_squared(self, rhs: Self) -> f32 {
+        let dx = self.x - rhs.x;
+        let dy = self.y - rhs.y;
+        let dz = self.z - rhs.z;
+        let dw = self.w - rhs.w;
+
+        dx * dx + dy * dy + dz * dz + dw * dw
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn unchecked_clamp(self, min: Self, max: Self) -> Self {
+        Self::unchecked_new(
+            self.x.clamp(min.x, max.x),
+            self.y.clamp(min.y, max.y),
+            self.z.clamp(min.z, max.z),
+            self.w.clamp(min.w, max.w),
         )
     }
 }

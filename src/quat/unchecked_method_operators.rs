@@ -21,6 +21,11 @@ impl Quat {
     }
 
     #[inline]
+    pub fn unchecked_add_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_add(rhs);
+    }
+
+    #[inline]
     #[must_use]
     pub const fn unchecked_sub(self, rhs: Self) -> Self {
         Self::unchecked_new(
@@ -29,6 +34,11 @@ impl Quat {
             self.z - rhs.z,
             self.w - rhs.w,
         )
+    }
+
+    #[inline]
+    pub fn unchecked_sub_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_sub(rhs);
     }
 
     #[inline]
@@ -43,7 +53,6 @@ impl Quat {
     }
 
     #[inline]
-    #[must_use]
     pub fn unchecked_mul_assign(&mut self, rhs: Self) {
         *self = self.unchecked_mul(rhs);
     }
@@ -51,10 +60,14 @@ impl Quat {
     #[inline]
     #[must_use]
     pub const fn unchecked_mul_vec3(self, rhs: Vec3) -> Vec3 {
+        let tx = 2.0 * (self.y * rhs.z - self.z * rhs.y);
+        let ty = 2.0 * (self.z * rhs.x - self.x * rhs.z);
+        let tz = 2.0 * (self.x * rhs.y - self.y * rhs.x);
+
         Vec3::unchecked_new(
-            self.x * rhs.x + self.y * rhs.y + self.z * rhs.z,
-            self.y * rhs.x - self.x * rhs.y + self.z * rhs.z,
-            self.z * rhs.x + self.y * rhs.y - self.x * rhs.z,
+            rhs.x + self.w * tx + self.y * tz - self.z * ty,
+            rhs.y + self.w * ty + self.z * tx - self.x * tz,
+            rhs.z + self.w * tz + self.x * ty - self.y * tx,
         )
     }
 
@@ -70,6 +83,11 @@ impl Quat {
     }
 
     #[inline]
+    pub fn unchecked_mul_scalar_assign(&mut self, scalar: f32) {
+        *self = self.unchecked_mul_scalar(scalar);
+    }
+
+    #[inline]
     #[must_use]
     pub const fn unchecked_div_scalar(self, scalar: f32) -> Self {
         Self::unchecked_new(
@@ -78,5 +96,10 @@ impl Quat {
             self.z / scalar,
             self.w / scalar,
         )
+    }
+
+    #[inline]
+    pub fn unchecked_div_scalar_assign(&mut self, scalar: f32) {
+        *self = self.unchecked_div_scalar(scalar);
     }
 }

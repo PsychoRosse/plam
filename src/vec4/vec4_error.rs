@@ -14,4 +14,6 @@ pub enum Vec4Error {
     DivisionByZero,
     #[error("Cannot normalize a zero-length vector")]
     ZeroLength,
+    #[error("Invalid range")]
+    InvalidRange,
 }

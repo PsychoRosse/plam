@@ -28,6 +28,12 @@ impl Vec2 {
     }
 
     #[inline]
+    pub fn checked_add_assign(&mut self, rhs: Self) -> Result<(), Vec2Error> {
+        *self = self.checked_add(rhs)?;
+        Ok(())
+    }
+
+    #[inline]
     pub const fn checked_sub(self, rhs: Self) -> Result<Self, Vec2Error> {
         if !self.is_finite() || !rhs.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -43,6 +49,12 @@ impl Vec2 {
     }
 
     #[inline]
+    pub fn checked_sub_assign(&mut self, rhs: Self) -> Result<(), Vec2Error> {
+        *self = self.checked_sub(rhs)?;
+        Ok(())
+    }
+
+    #[inline]
     pub const fn checked_mul(self, rhs: Self) -> Result<Self, Vec2Error> {
         if !self.is_finite() || !rhs.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -55,6 +67,12 @@ impl Vec2 {
         }
 
         Ok(result)
+    }
+
+    #[inline]
+    pub fn checked_mul_assign(&mut self, rhs: Self) -> Result<(), Vec2Error> {
+        *self = self.checked_mul(rhs)?;
+        Ok(())
     }
 
     #[inline]
@@ -77,6 +95,12 @@ impl Vec2 {
     }
 
     #[inline]
+    pub fn checked_div_assign(&mut self, rhs: Self) -> Result<(), Vec2Error> {
+        *self = self.checked_div(rhs)?;
+        Ok(())
+    }
+
+    #[inline]
     pub const fn checked_mul_scalar(self, scalar: f32) -> Result<Self, Vec2Error> {
         if !self.is_finite() || !scalar.is_finite() {
             return Err(Vec2Error::NonFiniteInput);
@@ -89,6 +113,12 @@ impl Vec2 {
         }
 
         Ok(result)
+    }
+
+    #[inline]
+    pub fn checked_mul_scalar_assign(&mut self, scalar: f32) -> Result<(), Vec2Error> {
+        *self = self.checked_mul_scalar(scalar)?;
+        Ok(())
     }
 
     #[inline]
@@ -108,5 +138,17 @@ impl Vec2 {
         }
 
         Ok(result)
+    }
+
+    #[inline]
+    pub fn checked_div_scalar_assign(&mut self, scalar: f32) -> Result<(), Vec2Error> {
+        *self = self.checked_div_scalar(scalar)?;
+        Ok(())
+    }
+
+    #[inline]
+    pub fn checked_neg_assign(&mut self) -> Result<(), Vec2Error> {
+        *self = self.checked_neg()?;
+        Ok(())
     }
 }

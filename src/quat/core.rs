@@ -76,6 +76,27 @@ impl Quat {
 
     #[inline]
     #[must_use]
+    pub fn is_rotation_approx_eq(self, rhs: Self, epsilon: f32) -> bool {
+        if !self.is_normalized() || !rhs.is_normalized() || !epsilon.is_finite() || epsilon < 0.0 {
+            return false;
+        }
+
+        let dot = self.x as f64 * rhs.x as f64
+            + self.y as f64 * rhs.y as f64
+            + self.z as f64 * rhs.z as f64
+            + self.w as f64 * rhs.w as f64;
+
+        1.0 - dot.abs() <= epsilon as f64
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn is_identity(self) -> bool {
+        self.is_approx_eq(Self::IDENTITY, 1e-6)
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn x(self) -> f32 {
         self.x
     }

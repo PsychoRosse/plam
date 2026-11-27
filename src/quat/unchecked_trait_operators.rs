@@ -2,7 +2,7 @@ use crate::Vec3;
 
 use super::Quat;
 
-use std::ops::{Add, Div, Mul, MulAssign, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 impl Neg for Quat {
     type Output = Self;
@@ -22,12 +22,26 @@ impl Add for Quat {
     }
 }
 
+impl AddAssign for Quat {
+    #[inline]
+    fn add_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_add(rhs);
+    }
+}
+
 impl Sub for Quat {
     type Output = Self;
 
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         self.unchecked_sub(rhs)
+    }
+}
+
+impl SubAssign for Quat {
+    #[inline]
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = self.unchecked_sub(rhs);
     }
 }
 
@@ -74,11 +88,25 @@ impl Mul<Quat> for f32 {
     }
 }
 
+impl MulAssign<f32> for Quat {
+    #[inline]
+    fn mul_assign(&mut self, rhs: f32) {
+        *self = self.unchecked_mul_scalar(rhs);
+    }
+}
+
 impl Div<f32> for Quat {
     type Output = Self;
 
     #[inline]
     fn div(self, rhs: f32) -> Self::Output {
         self.unchecked_div_scalar(rhs)
+    }
+}
+
+impl DivAssign<f32> for Quat {
+    #[inline]
+    fn div_assign(&mut self, rhs: f32) {
+        *self = self.unchecked_div_scalar(rhs);
     }
 }
